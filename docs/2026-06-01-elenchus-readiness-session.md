@@ -2,17 +2,19 @@
 artifact: elenchus-readiness-session
 premise: "Build Elenchus — a Socratic readiness + benchmarking council skill (Claude Code)"
 ready: false
-verdict: NOT-READY
-reason: "Only Category C (loop/state/resume mechanics) remains open; author is studying it."
+verdict: PENDING-BUILD-SUMMARY
+reason: "All design questions (A–E) resolved. Success exit now requires the author to write a
+  high-level build summary consistent with the resolved answers (design answer #6); the judge
+  then contradiction-scans it. Readiness is the author's own call."
 round: 2
 rounds_default: 2
 round_3: optional-user-invoked
 created: 2026-06-01
 updated: 2026-06-01
 seats: [opus, sonnet, haiku]
-open_questions: [C2, C3]
-resolved: [A1, A2, A3, A4, B1, C1, D1, D2, E1]
-still_open: [C2, C3]   # author admitted "I don't know" on C; study in progress
+open_questions: []
+resolved: [A1, A2, A3, A4, B1, C1, C2, C3, D1, D2, E1]
+still_open: []
 ---
 
 # Elenchus readiness session
@@ -48,16 +50,19 @@ unverified facts.
   MCP** (current library/framework/API docs — the class of fact the macOS-only check needs).
   Author may challenge a correction → re-verify.
 
-## Category C — Loop & state mechanics — OPEN (active study)
+## Category C — Loop & state mechanics — RESOLVED
 
 - [x] **C1** File = state/backlog; stress-test = always live on fresh answers. No conflict.
-- [ ] **C2 [FEASIBILITY] — OPEN.** Resume protocol: exact mechanism to reload this file and
-  re-seat the council at round N+1. Candidate split being studied: **SessionStart hook
-  (auto-load every session)** vs **skill scans a known dir on invoke (load only when used)**.
-  Author leans toward understanding hooks; research dispatched.
-- [ ] **C3 [GAP] — OPEN.** Returning with another "I don't know": reset / continue / close?
-  Plus the context-checkpoint question — how to clear/compact heavy context between rounds
-  while the markdown file preserves state on disk. Author admitted "I don't know"; studying.
+- [x] **C2** Resume protocol = **scan-on-invoke** (the skill Reads the state file from a known
+  path, e.g. `docs/elenchus/<premise>.md`, only when convened). No token cost / pollution on
+  unrelated sessions. A project-scoped `SessionStart` hook with `matcher: "resume"` is an
+  optional enhancement *only* if a whole repo is one Elenchus project — not the default.
+- [x] **C3** The markdown file IS the checkpoint (survives any context clear). Per round: skill
+  **Writes** state *during* the round → user `/clear` or `/compact` → next engagement skill
+  **Reads** it back. **Gotcha:** never rely on a `SessionEnd` hook to persist (~1.5s timeout);
+  write during the round, before clearing. A returning "I don't know" keeps the question open
+  (no reset/close); the loop terminates only when the author self-declares ready. "Default 2
+  rounds" is per engagement; re-entry across study sessions is unlimited and cheap.
 
 ## Category D — Diversity & cost — RESOLVED (conceded, honestly labeled)
 
@@ -72,9 +77,11 @@ unverified facts.
 
 ---
 
-## Next engagement
+## Next engagement — the success exit
 
-Close C2/C3 (hooks + context-checkpoint study in progress), then the author writes the
-high-level Elenchus build summary. A contradiction-free summary consistent with the resolved
-answers = the spec. The next build session then implements the readiness front end on top of
-the already-committed `elenchus-council` engine.
+All six categories (A–E) are resolved. By design answer #6, the readiness gate now clears one
+way: **the author writes the high-level Elenchus build summary** in their own words, consistent
+with the resolved answers above. The judge then contradiction-scans it against this file (not a
+quality judgment — only "does the summary contradict a logged decision?"). A clean scan + the
+author's own confidence = the spec. The next build session implements the readiness front end
+on top of the already-committed `elenchus-council` engine.
