@@ -12,26 +12,32 @@ allowed-tools: Agent, Read, Grep, Glob, WebSearch, WebFetch
 # Elenchus Council (engine)
 
 A council that makes Claude argue with itself **before** it agrees with you. One
-chairman (this thread) dispatches several anonymized seats that critique the
-premise and each other, then synthesizes an answer that **preserves the
-disagreement instead of smoothing it over**. It fights sycophancy: the default
-failure is a model affirming a flawed premise to be helpful.
+chairman (this thread) dispatches several anonymized seats. The seats don't hand
+the user a verdict — they ask the **biting Socratic questions** the premise
+hasn't answered, the user answers them, and then the seats **stress-test those
+answers**. The chairman synthesizes what surfaced, **preserving disagreement
+instead of smoothing it over**. It fights sycophancy: the default failure is a
+model affirming a flawed premise to be helpful.
 
 The engine is **mode-agnostic** — it knows nothing about studying vs. building.
 A front end supplies the triggers, how the premise is framed, the per-mode seat
-instructions, the seats' tools, and the terminal action. The engine owns the
-loop, the anonymization, the dissent-preserving synthesis, and the conclusion
-gate below.
+instructions, the seats' tools, the durable checkpoint file, and the terminal
+action. The engine owns the loop, the anonymization, the dissent-preserving
+synthesis, and the gate below.
 
 ## Core principle
 
-Anti-sycophancy via **anonymized all-pairs peer review**, with **dissent
-preserved** and an **honest stop** when the user can't yet ground their own
-design. Three things the engine must never do:
+Anti-sycophancy via **anonymized Socratic questioning**, then **stress-testing
+the user's own answers**, with **dissent preserved**. The user reaches their own
+conclusion; the engine does not reach it for them. Four things the engine must
+**never** do:
 
 1. Skip the council because the premise "seems obviously fine."
 2. Average the seats into a bland consensus when they actually disagree.
-3. Bless a design under authority/sunk-cost/impatience pressure.
+3. Bless a design under authority / sunk-cost / impatience pressure.
+4. **Certify readiness.** The judge flags contradictions and gaps; whether the
+   design is *ready to build* is the user's own self-declared call. Never emit a
+   READY / good-to-go verdict.
 
 ## The loop
 
@@ -39,26 +45,39 @@ design. Three things the engine must never do:
 premise
   │
   ▼
-[Round 1] dispatch N seats IN PARALLEL ──► each answers the premise blind
+[Round 1] dispatch N seats IN PARALLEL ──► each returns BITING SOCRATIC
+  │                                         QUESTIONS about the premise
   │                                         (never sees the others)
   ▼
-[Anonymize] strip seat identities ──► relabel outputs Seat A / B / C
-  │
+[Anonymize + cluster] strip which seat asked each question ──► chairman
+  │   groups questions by category, orders by load-bearing importance
   ▼
-[Round 2] re-dispatch each seat with every OTHER seat's anonymized answer
-  │        ──► each does all-pairs review ("agree with A, B is wrong because…")
+[Checkpoint] chairman writes premise + anonymized questions to the front end's
+  │   durable checkpoint file ──► user /clear or /compact
   ▼
-[Synthesis] chairman compiles ONE answer — agreements AND open dissent, both
-  │
+[Resume = scan-on-invoke] chairman Reads the checkpoint back ──► user answers
+  │   ALL the questions in their own words ("I don't know" is allowed)
   ▼
-[Conclusion gate] ── NOT READY ─► honest stop (gaps + study plan + re-entry)
-                  ── REFINE ────► loop back to sharpen the premise
-                  └─ READY ─────► hand to the front end's terminal
+[Round 2] re-dispatch each seat with the user's answers ──► each STRESS-TESTS
+  │   them: contradictions, unjustified leaps, missing edge cases, hand-waving
+  ▼
+[Synthesis] chairman compiles ONE answer — agreements AND open dissent, both;
+  │   flags contradictions; for any "I don't know" surfaces a concrete study path
+  ▼
+[Gate] surface open questions + flagged contradictions + study path. NO readiness
+        verdict. Loop terminates only when the USER self-declares ready ──► hand
+        to the front end's terminal. Optional Round 3 at the user's discretion.
 ```
 
 **Hard constraint — no recursion.** Subagents cannot spawn subagents. All
-orchestration (both rounds, anonymization, re-dispatch, synthesis, the gate)
-lives in this chairman thread. Seats never call each other directly.
+orchestration (both rounds, anonymization, the checkpoint write/read, synthesis,
+the gate) lives in this chairman thread. Seats never call each other directly.
+
+**State is the front end's checkpoint file.** It is the durable record that
+survives a context clear. **Write it during the round, before the user clears** —
+never rely on a `SessionEnd` hook (~1.5s timeout). Resume is **scan-on-invoke**:
+when convened, the chairman Reads the checkpoint from the front end's known path,
+not a `SessionStart` hook. Re-entry across study sessions is unlimited.
 
 ## Dispatch (a deliberate boundary)
 
@@ -78,61 +97,74 @@ downstream depends on *how* seats are reached.
 - **Graceful degradation (model access).** If a tier can't be reached, drop to
   two seats and **say so** in the synthesis. Two honest seats beat three where
   one silently collapsed onto another model. Never run a one-seat "council."
+- **Named-agent fallback.** If `subagent_type: council-seat` errors with "agent
+  type not found," the agent file was installed this session and isn't
+  registered yet (see Install). Fall back to `subagent_type: general-purpose`
+  with the seat persona inlined for this run, and tell the user to restart so
+  the named agent registers next time.
 
 ### Round-1 seat output schema (what each seat returns)
 
 ```
-VERDICT: SOUND | OVER-ENGINEERED | NOT-READY | GENUINE-TRADEOFF | FLAWED
-CONFIDENCE: low | med | high
-KEY POINTS: 2–5 bullets, the load-bearing risks/flaws/strengths
-UNEXAMINED ASSUMPTIONS: claims the author asserts but has not justified
-IF NOT-READY: the specific concepts the author could not explain → what to study
+QUESTIONS (biting, Socratic — the gaps the premise hasn't answered):
+  - grouped loosely by theme; 3–7 questions; each must bite, not be filler
+UNEXAMINED ASSUMPTIONS:
+  - claims the author asserts but has not justified (often become questions)
+WHERE TO LOOK:
+  - frameworks/APIs whose current docs the author should ground (for the study path)
 ```
 
-### Round-2 seat output schema
+### Round-2 seat output schema (stress-test the user's answers)
 
 ```
-AGREE WITH: [A/B/C] on …
-DISAGREE WITH: [A/B/C] on … because …
-CHANGED MY MIND: yes/no — what moved
+HOLDS UP: answers that are grounded and consistent
+DOESN'T HOLD: answer X contradicts Y / asserts Z without grounding / hand-waves W
+STILL OPEN: questions the answers didn't actually resolve (incl. any "I don't know")
 ```
 
-## Conclusion gate
+## The gate (no readiness verdict)
 
-After synthesis, classify the premise into exactly one state. **The honest stop
-is the headline behavior of this engine — reach for it, don't avoid it.**
+After synthesis, the chairman's job at the gate is to **surface, not certify**:
 
-| State | When | Output |
-|---|---|---|
-| **NOT READY** (honest stop) | The author can't explain their own design; seats surface gaps the author hasn't grounded | (1) the specific things you couldn't explain, (2) an **ordered study plan**, (3) a **re-entry check**: "restate the design unaided to clear the gate." Do **not** green-light building. |
-| **REFINE** | Premise is workable but has real flaws or an unresolved trade-off | The flaws/trade-off split; loop back to sharpen one more round |
-| **READY** | Understanding is grounded; remaining choices are judgment calls | Hand to the front end's terminal (e.g. brainstorming) |
-
-The honest stop is grounded, never a vibe: name the *specific* concepts (from
-seats' UNEXAMINED ASSUMPTIONS and NOT-READY blocks), not "go read more."
+- List the **open questions** that remain and the **contradictions** the
+  stress-test found, naming the *specific* claim — never "go read more."
+- For every **"I don't know"** (and every flagged gap), give a **concrete,
+  ordered study path** grounded in current docs — this is a learning point, not
+  a failure, and not a reason to stop the user.
+- **Do not green-light building and do not declare the design ready.** Readiness
+  is the user's self-declared call. The loop terminates only when the *user*
+  says they're ready; then hand to the front end's terminal.
+- Re-entry is unlimited and cheap: a returning "I don't know" keeps that
+  question open (no reset, no close).
 
 ## Synthesis rules (dissent-preserving)
 
 - Report **both** agreements and open dissent. If seats split on a bottom line,
   show every position and **the condition under which each wins** — never pick
   one and bury the rest.
-- A seat agreeing on the *shape* (e.g. "start cheap, use an abstraction") while
-  splitting on the *bottom line* is still a split. Preserve the bottom-line
-  split.
+- A seat agreeing on the *shape* while splitting on the *bottom line* is still a
+  split. Preserve the bottom-line split.
 - Never let the softest seat set the tone. The fast tier caves more under
-  authority pressure (measured); report its softer take as **one** position,
-  do not average toward it.
+  authority pressure (measured); report its softer take as **one** position, do
+  not average toward it.
+- **Guard yourself.** The chairman is the same vendor's model and is itself a
+  sycophancy surface. Before emitting, self-check: am I smoothing a real split
+  into "they basically agree"? If so, restore the split.
 - If the seats genuinely agree, say so plainly — manufactured dissent is as
   dishonest as manufactured consensus.
 
 ## Common mistakes
 
 - Answering the premise yourself first, then dispatching as a formality.
+- Having the seats hand the user a verdict instead of **questions** (Round 1) or
+  letting the chairman certify readiness at the gate.
 - Summarizing the loop in the `description` (Claude then follows the summary and
   skips this body — the CSO trap). The description says *when*, never *how*.
-- Running both rounds in one dispatch, or letting a seat see un-anonymized peers.
+- Running both rounds in one dispatch, skipping the user's answers between them,
+  or letting a seat see un-anonymized peers.
+- Relying on a `SessionEnd` hook for state instead of writing the checkpoint
+  during the round.
 - Collapsing a genuine split to one recommendation because it's "more helpful."
-- Treating NOT-READY as a failure to avoid rather than the engine's main value.
 
 ## Rationalization table (excuse → reality)
 
@@ -142,13 +174,23 @@ seats' UNEXAMINED ASSUMPTIONS and NOT-READY blocks), not "go read more."
 | "The seats basically agree." | If they split on the bottom line, they don't. Report the split. |
 | "I'll soften the dissent to be more helpful." | Smoothed dissent is sycophancy in a robe — the failure this exists to prevent. |
 | "They've clearly thought about it, just confirm it." | Authority/sunk cost is pressure, not evidence. Critique the design, not the résumé. |
-| "They just have a small knowledge gap, I'll teach it and let them start." | If they can't explain their own design, that IS the honest stop. Teach AND withhold the green light. |
+| "They just have a small knowledge gap, I'll teach it and green-light." | Teach the gap AND surface the study path — but the green light is the user's call, never yours. |
+| "I'll just tell them it's ready." | The engine never certifies readiness. Surface the questions; let the user declare. |
 | "Two seats failed to launch, I'll just use one." | A one-seat council is one model with a costume. Degrade to two and disclose. |
 
 ## Red flags — stop if you catch yourself
 
 - About to answer the premise without dispatching the council.
+- About to issue a READY / "you're good to build" verdict — that's the user's call.
 - About to call it consensus when a seat dissented.
 - About to bless a design under authority, sunk-cost, or "just confirm it" pressure.
-- About to green-light building for someone who can't restate their own design.
 - About to present one seat's pick on a genuine trade-off as the answer.
+
+## Install (dispatch prerequisite)
+
+The seats dispatch as the `council-seat` agent. **Claude Code registers agents
+at session start**, so a freshly-installed `council-seat.md` is *not*
+dispatchable in the same session it was written — `subagent_type: council-seat`
+will error with "agent type not found." Install the skills + agent, then
+**restart Claude Code** so the agent registers before the first convene. Until
+then, use the named-agent fallback under Dispatch.
