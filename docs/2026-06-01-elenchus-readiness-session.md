@@ -2,10 +2,12 @@
 artifact: elenchus-readiness-session
 premise: "Build Elenchus — a Socratic readiness + benchmarking council skill (Claude Code)"
 ready: false
-verdict: PENDING-BUILD-SUMMARY
-reason: "All design questions (A–E) resolved. Success exit now requires the author to write a
-  high-level build summary consistent with the resolved answers (design answer #6); the judge
-  then contradiction-scans it. Readiness is the author's own call."
+verdict: SCAN-CLEAN — awaiting author's self-declared ready
+reason: "All design questions (A–E) resolved; author wrote the build summary
+  (docs/2026-06-02-elenchus-build-summary.md). Judge contradiction-scan: CLEAN after one flag
+  (scope, C-1) was resolved. Per Category A, the ready declaration is the author's, not the
+  judge's — `ready` flips only when the author says so."
+build_summary: docs/2026-06-02-elenchus-build-summary.md
 round: 2
 rounds_default: 2
 round_3: optional-user-invoked
