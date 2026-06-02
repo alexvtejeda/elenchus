@@ -1,12 +1,11 @@
 ---
 artifact: elenchus-readiness-session
 premise: "Build Elenchus — a Socratic readiness + benchmarking council skill (Claude Code)"
-ready: false
-verdict: SCAN-CLEAN — awaiting author's self-declared ready
-reason: "All design questions (A–E) resolved; author wrote the build summary
-  (docs/2026-06-02-elenchus-build-summary.md). Judge contradiction-scan: CLEAN after one flag
-  (scope, C-1) was resolved. Per Category A, the ready declaration is the author's, not the
-  judge's — `ready` flips only when the author says so."
+ready: true
+verdict: READY — author self-declared; design phase closed
+reason: "Author declared ready (2026-06-02). All design questions (A–E) resolved; build summary
+  (docs/2026-06-02-elenchus-build-summary.md) is contradiction-scan clean. Design phase closed.
+  Next: implement the elenchus-build front end on the committed elenchus-council engine."
 build_summary: docs/2026-06-02-elenchus-build-summary.md
 round: 2
 rounds_default: 2
