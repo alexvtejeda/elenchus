@@ -16,7 +16,10 @@ giving sycophantic reassurance. Architecture:
 - **Engine** (`elenchus-council`) owns the loop, anonymization, dissent-preserving synthesis,
   and the gate. It is invoked by a front end, not triggered directly by ordinary feature
   requests.
-- **Front end** (`elenchus-build`) is the build/architecture mode over the engine.
+- **Front ends** sit over the engine and supply mode specifics (triggers, premise/topic
+  shaping, round templates, checkpoint, terminal): `elenchus-build` (build/architecture
+  mode — premise-first) and `elenchus-study` (research mode — resources-first inverted loop:
+  gather → ground → challenge).
 
 The tool never issues a verdict or green-lights a design — it surfaces contradictions, gaps,
 and a study path; the user decides when they are ready. Preserve this: when seats disagree,
@@ -32,8 +35,10 @@ skill sources and the `council-seat` agent, and holds the design docs and valida
 
 **Skills and agents follow different rules — do not assume one mirroring convention.**
 
-- **Skills** (`skills/elenchus-build`, `skills/elenchus-council`): the copy Claude Code
-  actually loads is the **global install** (`~/.claude/skills/`). The top-level `skills/`
+- **Skills** (`skills/elenchus-build`, `skills/elenchus-study`, `skills/elenchus-council`):
+  the copy Claude Code actually loads is the **global install** (`~/.claude/skills/`).
+  Each front end owns its `templates/` (round schemas); the engine owns
+  `templates/{seat-base,tiers}.md`. The top-level `skills/`
   tree in this repo is a **version-controlled archive** — editing it does **not** change
   runtime behavior. Sync any change to the global install too, or the runtime won't see it.
   There is **no `.claude/skills/`**.
@@ -45,6 +50,16 @@ skill sources and the `council-seat` agent, and holds the design docs and valida
 `council-seat.md`, **start a fresh session** before convening, or
 `subagent_type: council-seat` errors with "agent type not found."
 
+**Seat prompts are composed from templates — the engine carries no round schemas.** The
+`council-seat` agent is a **thin sandbox** (restricted tools, no recursion); its persona,
+round task, and output schema arrive *inside the chairman's dispatch prompt*. That prompt is
+composed of: `elenchus-council/templates/seat-base.md` (mode-agnostic persona) +
+`elenchus-council/templates/tiers.md` (per-tier adapters) + the **front end's** round
+template (`<front-end>/templates/round-N-*.md`, which owns the exact output schema) + the
+premise. **Do not re-bake round schemas into the engine `SKILL.md`** — that breaks
+mode-agnosticism. New modes add a front end with its own round templates; they reuse the
+engine loop unchanged.
+
 ## Durable state (checkpoints)
 
 `elenchus-build` writes a per-premise checkpoint to `docs/elenchus/<premise-slug>.md`
@@ -52,6 +67,10 @@ skill sources and the `council-seat` agent, and holds the design docs and valida
 On re-invoke, the skill reads the checkpoint, and if it's open (`ready: false`) resumes from
 the saved round. **Never** rely on SessionEnd hooks to persist state (their ~1.5s timeout can
 drop the write).
+
+`elenchus-study` writes **two** files per topic under `docs/elenchus-study/`:
+`<topic-slug>.md` (session checkpoint) + `<topic-slug>-resources.md` (the Round-1 deduped
+resource list). Same resume-on-invoke + survive-`/clear` discipline as build mode.
 
 ## Context7 MCP
 
@@ -70,6 +89,7 @@ the key** — it lives in `.env`, which is gitignored. The repo ships no key by 
 ## Source-of-truth docs
 
 - `docs/2026-06-02-elenchus-build-summary.md` — v0.1 spec (read first).
+- `docs/2026-06-01-elenchus-build-design.md` — build front-end design doc (companion to the spec).
 - `docs/2026-06-02-next-session-handoff.md` — next-phase kickoff + engine reconciliation list.
 - `docs/2026-06-01-elenchus-readiness-session.md` — design-decisions log.
 - `docs/validation/harness.md` — repeatable validation harness (fixtures + spec-invariant

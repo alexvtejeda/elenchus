@@ -41,5 +41,21 @@ update `elenchus-council` to match the build summary:
 7. **Dispatch caveat.** The `council-seat` agent isn't dispatchable mid-session (agents register
    at startup) — document an install-then-restart step in the deployment notes.
 
+## Validation harness (scaffold ready; baseline run pending)
+
+`docs/validation/harness.md` formalizes the phase-0 scenarios into 6 re-runnable **fixtures**
+(S1–S4 from the baseline + S5 sound-premise / no-manufactured-doubt + S6 degraded-dispatch),
+each with scripted answers, scored against the **spec invariants** (I1–I10) — not the
+committed engine. **The baseline run has not been executed yet.** Running it doubles as a check
+on the reconciliation list above (the spec-invariant rubric will flag the stale READY verdict
+and all-pairs Round 2). It also becomes the yardstick for the planned *relentless / adaptive*
+redesign (hybrid pool→one-at-a-time questioning; recommended answers only AFTER the user
+answers) — see the delta protocol in the harness.
+
+**Kickoff line for the baseline run:**
+> "Read docs/validation/harness.md and run the baseline: convene elenchus-council on fixtures
+> S1–S6 with their scripted answers, fill the scorecard, and save it to
+> docs/validation/runs/2026-06-02-baseline.md."
+
 ## Kickoff line for the fresh session
 "Read docs/2026-06-02-next-session-handoff.md and build the elenchus-build front end."

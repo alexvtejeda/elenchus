@@ -13,11 +13,12 @@ allowed-tools: Agent, Read, Grep, Glob, WebSearch, WebFetch
 
 A council that makes Claude argue with itself **before** it agrees with you. One
 chairman (this thread) dispatches several anonymized seats. The seats don't hand
-the user a verdict — they ask the **biting Socratic questions** the premise
-hasn't answered, the user answers them, and then the seats **stress-test those
-answers**. The chairman synthesizes what surfaced, **preserving disagreement
-instead of smoothing it over**. It fights sycophancy: the default failure is a
-model affirming a flawed premise to be helpful.
+the user a verdict — in the default shape they ask the **biting Socratic
+questions** the premise hasn't answered, the user responds, and then the seats
+**stress-test those responses** (a front end may define different round tasks, but
+the seats never issue a verdict). The chairman synthesizes what surfaced,
+**preserving disagreement instead of smoothing it over**. It fights sycophancy: the
+default failure is a model affirming a flawed premise to be helpful.
 
 The engine is **mode-agnostic** — it knows nothing about studying vs. building.
 A front end supplies the triggers, how the premise is framed, the per-mode seat
@@ -45,28 +46,30 @@ conclusion; the engine does not reach it for them. Four things the engine must
 premise
   │
   ▼
-[Round 1] dispatch N seats IN PARALLEL ──► each returns BITING SOCRATIC
-  │                                         QUESTIONS about the premise
-  │                                         (never sees the others)
+[Round 1] dispatch N seats IN PARALLEL ──► each returns its Round-1 output per
+  │                                         the front end's template (default:
+  │                                         biting Socratic questions; study mode:
+  │                                         gathered resources). Never sees the others.
   ▼
-[Anonymize + cluster] strip which seat asked each question ──► chairman
-  │   groups questions by category, orders by load-bearing importance
+[Anonymize + cluster] strip which seat produced each item ──► chairman
+  │   groups by category, orders by load-bearing importance (study: dedups links)
   ▼
-[Checkpoint] chairman writes premise + anonymized questions to the front end's
+[Checkpoint] chairman writes premise + anonymized round output to the front end's
   │   durable checkpoint file ──► user /clear or /compact
   ▼
-[Resume = scan-on-invoke] chairman Reads the checkpoint back ──► user answers
-  │   ALL the questions in their own words ("I don't know" is allowed)
+[Resume = scan-on-invoke] chairman Reads the checkpoint back ──► user responds
+  │   in their own words (default: answers ALL questions; "I don't know" is allowed)
   ▼
-[Round 2] re-dispatch each seat with the user's answers ──► each STRESS-TESTS
-  │   them: contradictions, unjustified leaps, missing edge cases, hand-waving
+[Round 2] re-dispatch each seat with the user's response ──► each runs the front
+  │   end's Round-2 template (default: STRESS-TEST — contradictions, unjustified
+  │   leaps, missing edge cases, hand-waving)
   ▼
 [Synthesis] chairman compiles ONE answer — agreements AND open dissent, both;
   │   flags contradictions; for any "I don't know" surfaces a concrete study path
   ▼
 [Gate] surface open questions + flagged contradictions + study path. NO readiness
-        verdict. Loop terminates only when the USER self-declares ready ──► hand
-        to the front end's terminal. Optional Round 3 at the user's discretion.
+        verdict. Loop terminates only when the USER self-declares ready/done ──► hand
+        to the front end's terminal. Optional further rounds at the user's discretion.
 ```
 
 **Hard constraint — no recursion.** Subagents cannot spawn subagents. All
@@ -86,7 +89,9 @@ subagents for a provider-agnostic proxy). Keep it isolated here so nothing
 downstream depends on *how* seats are reached.
 
 - Dispatch seats with the `Agent` tool, `subagent_type: council-seat`, one call
-  per seat, **all in a single message** so they run in parallel.
+  per seat, **all in a single message** so they run in parallel. The seat is a
+  thin sandbox; **compose each call's prompt** per **Templates & composition**
+  below (seat-base + this round's front-end template + the seat's tier row).
 - Pin each seat to a different tier for decorrelation:
   `model: opus` · `model: sonnet` · `model: haiku`. Three tiers (top /
   strong-mid / fast-small) are more decorrelated than near-twins and the fast
@@ -100,27 +105,34 @@ downstream depends on *how* seats are reached.
 - **Named-agent fallback.** If `subagent_type: council-seat` errors with "agent
   type not found," the agent file was installed this session and isn't
   registered yet (see Install). Fall back to `subagent_type: general-purpose`
-  with the seat persona inlined for this run, and tell the user to restart so
-  the named agent registers next time.
+  with the **composed prompt** inlined for this run (the prompt already carries
+  the full persona, so no behavior is lost — only the tool sandbox), and tell the
+  user to restart so the named agent registers next time.
 
-### Round-1 seat output schema (what each seat returns)
+### Templates & composition (how a seat's prompt is built)
 
-```
-QUESTIONS (biting, Socratic — the gaps the premise hasn't answered):
-  - grouped loosely by theme; 3–7 questions; each must bite, not be filler
-UNEXAMINED ASSUMPTIONS:
-  - claims the author asserts but has not justified (often become questions)
-WHERE TO LOOK:
-  - frameworks/APIs whose current docs the author should ground (for the study path)
-```
-
-### Round-2 seat output schema (stress-test the user's answers)
+The engine carries **no round schemas of its own** — that is what keeps it
+mode-agnostic. A seat's dispatch prompt is **composed** from four parts:
 
 ```
-HOLDS UP: answers that are grounded and consistent
-DOESN'T HOLD: answer X contradicts Y / asserts Z without grounding / hand-waves W
-STILL OPEN: questions the answers didn't actually resolve (incl. any "I don't know")
+dispatch prompt =
+    templates/seat-base.md        (engine — mode-agnostic persona)
+  + <front end>/templates/round-N-*.md   (the front end — THIS round's task + exact schema)
+  + the tier row from templates/tiers.md  (engine — adapt the prompt to this seat's tier)
+  + the premise/topic (+ in round ≥2, the user's prior answers)
+  + an explicit "you are in round N" line
 ```
+
+**Before dispatching any round, the chairman MUST read** `templates/seat-base.md`,
+`templates/tiers.md`, and **the front end's template for this round**, then inline
+the composed prompt into each `Agent` call. The seat agent itself is a thin sandbox
+(restricted tools, no recursion) — all substance lives in the composed prompt.
+
+**The front end owns the round design:** how many rounds, and one round template per
+round defining that round's task and the **exact output schema** seats must return.
+The engine owns only the loop, anonymization, synthesis, and the gate. The default
+shape is **2 rounds + optional 3rd** (generate → user responds → stress-test), but a
+front end may define N rounds (e.g. study mode: gather → respond → challenge).
 
 ## The gate (no readiness verdict)
 

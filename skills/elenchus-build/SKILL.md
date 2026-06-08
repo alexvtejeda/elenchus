@@ -6,8 +6,10 @@ description: >-
   architecture for X", "review my architecture before I build", "is my mental
   model of X sound", "I want to build Y because Z — poke holes in it". For the
   still-articulating stage, before brainstorming. NOT for ideas already decided
-  (that's brainstorming) and NOT for an over-engineering / flaw yes-no verdict
-  ("is X over-engineering?") — a single high-tier model can answer those.
+  (that's brainstorming), NOT for researching/learning a topic the user has no
+  premise about yet ("I want to learn about X" / "gather resources on Y" — that's
+  elenchus-study), and NOT for an over-engineering / flaw yes-no verdict ("is X
+  over-engineering?") — a single high-tier model can answer those.
 allowed-tools: Agent, Read, Write, Grep, Glob, WebSearch, WebFetch
 ---
 
@@ -46,17 +48,25 @@ where it's thin. Draw out:
 
 Pass this to the engine as the premise. Don't pre-critique it.
 
-## Seat instructions & tools (build mode)
+## Round templates (build mode)
 
-- **Lens:** architecture. Round 1 — ask the biting questions a senior reviewer
-  would ask about *this* design (the un-named failure mode, the edge case, the
-  "can you actually explain this part?"). Round 2 — stress-test the user's
-  answers for contradictions, unjustified leaps, and hand-waving.
-- **Tools:** the council-seat agent already has Read/Grep/Glob/WebSearch/WebFetch
-  plus **Context7 MCP**. In build mode the seats should ground every framework /
-  API the user named against **current docs** (Context7 first, web second) — both
-  to ask accurate questions and to point at a concrete, current study path rather
-  than generic advice.
+The engine composes each seat's prompt from `seat-base` + a **round template this
+skill owns** + the tier adapter (see `elenchus-council` → *Templates &
+composition*). Build mode supplies two:
+
+- **Round 1 — `templates/round-1-questions.md`.** Lens: architecture. The biting
+  questions a senior reviewer would ask about *this* design (the un-named failure
+  mode, the edge case, "can you actually explain this part?"). Schema:
+  `QUESTIONS / UNEXAMINED ASSUMPTIONS / WHERE TO LOOK`.
+- **Round 2 — `templates/round-2-stress-test.md`.** Stress-test the user's answers
+  for contradictions, unjustified leaps, and hand-waving. Schema:
+  `HOLDS UP / DOESN'T HOLD / STILL OPEN`.
+
+**Tools/grounding:** the council-seat sandbox carries Read/Grep/Glob/WebSearch/
+WebFetch + **Context7 MCP**. In build mode the seats ground every framework / API
+the user named against **current docs** (Context7 first, web second) — both to ask
+accurate questions and to point at a concrete, current study path, not generic
+advice.
 
 ## The checkpoint file (durable state)
 
