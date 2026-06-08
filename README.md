@@ -12,24 +12,40 @@ See `docs/2026-06-02-elenchus-build-summary.md` for the v0.1 spec.
 
 ## Components
 
-| Path | What it is |
+| Path in this repo | What it is |
 |---|---|
-| `.claude/skills/elenchus-council/SKILL.md` | The shared council engine (the loop, anonymization, dissent-preserving synthesis, the gate). |
-| `.claude/skills/elenchus-build/SKILL.md` | The build/architecture front end over the engine. |
-| `.claude/agents/council-seat.md` | One generic council seat, dispatched 3× pinned to different model tiers. |
+| `skills/elenchus-council/` | The shared council engine (the loop, anonymization, dissent-preserving synthesis, the gate). |
+| `skills/elenchus-build/` | The build/architecture front end over the engine. |
+| `skills/elenchus-study/` | The research/study front end (resources-first inverted loop). |
+| `agents/council-seat.md` | One generic council seat, dispatched 3× pinned to different model tiers (Opus / Sonnet / Haiku). |
 
 ## Install
 
-These are project-scoped — cloning the repo and opening it in Claude Code is enough for the
-skills and the `council-seat` agent to be discovered.
+**Cloning the repo is not enough.** Claude Code does not load skills from this repo's
+top-level `skills/` directory — that tree is the version-controlled source. You must copy
+the skills (and the agent) into a location Claude Code actually scans. Pick **one** scope:
+
+- **Per-project** — usable only inside a given project:
+  - skills → that project's `.claude/skills/`
+  - agent  → that project's `.claude/agents/`
+- **Global** — usable in every project:
+  - skills → `~/.claude/skills/`
+  - agent  → `~/.claude/agents/`
+
+For example, to install globally from a clone of this repo:
+
+```sh
+cp -r skills/elenchus-council skills/elenchus-build skills/elenchus-study ~/.claude/skills/
+cp agents/council-seat.md ~/.claude/agents/
+```
+
+(For a per-project install, replace `~/.claude/` with `<your-project>/.claude/`.) All three
+skills depend on the `council-seat` agent, so always copy it alongside them.
 
 > **Restart required.** Claude Code registers agents and skills at session start. After
-> cloning (or after editing `council-seat.md`), **start a fresh Claude Code session** before
-> convening the council, or `subagent_type: council-seat` will error with "agent type not
-> found."
-
-To use them globally instead of per-project, copy the three paths above into your user
-config (`~/.claude/skills/...` and `~/.claude/agents/...`).
+> copying the files in (or after editing `council-seat.md`), **start a fresh Claude Code
+> session** before convening the council, or `subagent_type: council-seat` will error with
+> "agent type not found."
 
 ## Context7 MCP (recommended)
 
