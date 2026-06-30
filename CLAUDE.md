@@ -18,8 +18,12 @@ giving sycophantic reassurance. Architecture:
   requests.
 - **Front ends** sit over the engine and supply mode specifics (triggers, premise/topic
   shaping, round templates, checkpoint, terminal): `elenchus-build` (build/architecture
-  mode — premise-first) and `elenchus-study` (research mode — resources-first inverted loop:
-  gather → ground → challenge).
+  mode — premise-first), `elenchus-study` (research mode — resources-first inverted loop:
+  gather → ground → challenge), and `elenchus-gather` (harvest mode — builds a closed
+  corpus of verified links/resources: harvest → verify → dedup → coverage report, no
+  critique). Gather reuses the engine's fan-out + decorrelated seats + dedup + honesty,
+  but has no premise and asks the user nothing between rounds; the chairman additionally
+  re-verifies every URL before writing the corpus.
 
 The tool never issues a verdict or green-lights a design — it surfaces contradictions, gaps,
 and a study path; the user decides when they are ready. Preserve this: when seats disagree,
@@ -35,7 +39,8 @@ skill sources and the `council-seat` agent, and holds the design docs and valida
 
 **Skills and agents follow different rules — do not assume one mirroring convention.**
 
-- **Skills** (`skills/elenchus-build`, `skills/elenchus-study`, `skills/elenchus-council`):
+- **Skills** (`skills/elenchus-build`, `skills/elenchus-study`, `skills/elenchus-gather`,
+  `skills/elenchus-council`):
   the copy Claude Code actually loads is the **global install** (`~/.claude/skills/`).
   Each front end owns its `templates/` (round schemas); the engine owns
   `templates/{seat-base,tiers}.md`. The top-level `skills/`
@@ -71,6 +76,12 @@ drop the write).
 `elenchus-study` writes **two** files per topic under `docs/elenchus-study/`:
 `<topic-slug>.md` (session checkpoint) + `<topic-slug>-resources.md` (the Round-1 deduped
 resource list). Same resume-on-invoke + survive-`/clear` discipline as build mode.
+
+`elenchus-gather` writes **two** files per corpus under `docs/elenchus/`:
+`<corpus-slug>-gather.md` (session checkpoint + coverage report) + `<corpus-slug>-corpus.<yaml|json|md>`
+(the deduped, verified entries in the format the downstream consumer reads). The corpus file
+may be written during the round (it carries data, not a recommendation). Same
+resume-on-invoke + survive-`/clear` discipline.
 
 ## Context7 MCP
 

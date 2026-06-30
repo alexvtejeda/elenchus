@@ -17,6 +17,7 @@ See `docs/2026-06-02-elenchus-build-summary.md` for the v0.1 spec.
 | `skills/elenchus-council/` | The shared council engine (the loop, anonymization, dissent-preserving synthesis, the gate). |
 | `skills/elenchus-build/` | The build/architecture front end over the engine. |
 | `skills/elenchus-study/` | The research/study front end (resources-first inverted loop). |
+| `skills/elenchus-gather/` | The harvest front end — builds a closed corpus of real, verified links/resources (fan-out → verify → dedup → coverage report). |
 | `agents/council-seat.md` | One generic council seat, dispatched 3× pinned to different model tiers (Opus / Sonnet / Haiku). |
 
 ## Install
@@ -35,11 +36,11 @@ the skills (and the agent) into a location Claude Code actually scans. Pick **on
 For example, to install globally from a clone of this repo:
 
 ```sh
-cp -r skills/elenchus-council skills/elenchus-build skills/elenchus-study ~/.claude/skills/
+cp -r skills/elenchus-council skills/elenchus-build skills/elenchus-study skills/elenchus-gather ~/.claude/skills/
 cp agents/council-seat.md ~/.claude/agents/
 ```
 
-(For a per-project install, replace `~/.claude/` with `<your-project>/.claude/`.) All three
+(For a per-project install, replace `~/.claude/` with `<your-project>/.claude/`.) All four
 skills depend on the `council-seat` agent, so always copy it alongside them.
 
 > **Restart required.** Claude Code registers agents and skills at session start. After
