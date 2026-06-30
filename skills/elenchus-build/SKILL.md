@@ -52,7 +52,7 @@ Pass this to the engine as the premise. Don't pre-critique it.
 
 The engine composes each seat's prompt from `seat-base` + a **round template this
 skill owns** + the tier adapter (see `elenchus-council` → *Templates &
-composition*). Build mode supplies two:
+composition*). Build mode supplies three:
 
 - **Round 1 — `templates/round-1-questions.md`.** Lens: architecture. The biting
   questions a senior reviewer would ask about *this* design (the un-named failure
@@ -61,6 +61,10 @@ composition*). Build mode supplies two:
 - **Round 2 — `templates/round-2-stress-test.md`.** Stress-test the user's answers
   for contradictions, unjustified leaps, and hand-waving. Schema:
   `HOLDS UP / DOESN'T HOLD / STILL OPEN`.
+- **Round 3 — `templates/round-3-spec-check.md`** (terminal only, runs once the
+  user self-declares ready — see *Terminal*). Seats audit the chairman's **draft
+  spec** against the session record for fidelity and completeness, not the user's
+  design. Schema: `CAPTURED FAITHFULLY / MISSING / MISREPRESENTED`.
 
 **Tools/grounding:** the council-seat sandbox carries Read/Grep/Glob/WebSearch/
 WebFetch + **Context7 MCP**. In build mode the seats ground every framework / API
@@ -96,6 +100,7 @@ frameworks: [...]     # tools/APIs the seats grounded via Context7/web
 open_questions: [Q1, Q2, ...]   # ids unanswered or returned "I don't know"
 resolved: [...]
 study_path: [...]     # concepts to study for any "I don't know" / flagged gap
+spec_path: null       # set to docs/superpowers/specs/<date>-<slug>.md once written
 created: <date>
 updated: <date>
 ---
@@ -108,15 +113,50 @@ path**.
 
 ## Terminal
 
-- **Success exit = the user self-declares ready.** Then hand the grounded premise
-  to the **brainstorming skill** — the step Elenchus precedes (brainstorming
-  assumes you already know what to build; Elenchus is the stress-test before
-  that). Set `ready: true` in the checkpoint only because the *user* declared it.
+- **Success exit = the user self-declares ready.** This does **not** end with a bare
+  hand-off — it ends with a **verified spec** that pins down what the session settled,
+  produced in four steps (Spec synthesis, below): the chairman drafts → the council
+  verifies the draft (Round 3) → the chairman revises → the user finalizes it. The spec
+  is the input the **brainstorming skill** then reviews (and from there, writing-plans).
+  Elenchus is the stress-test *before* brainstorming; the spec is the bridge between them.
+  Set `ready: true` in the checkpoint only because the *user* declared it.
 - **Open questions / an "I don't know" → honest stop.** Present the ordered study
   path (grounded in current docs), keep the checkpoint open, and invite re-entry
   after study. An "I don't know" is a learning point, **not** a failure — and
   **not** your cue to teach the gap and green-light building anyway. Teach if
-  asked, but the green light is the user's call. Never certify readiness.
+  asked, but the green light is the user's call. Never certify readiness. Do **not**
+  write a spec while questions are still open unless the user explicitly asks for an
+  interim spec that records the gaps as open.
+
+## Spec synthesis (the terminal artifact)
+
+Once the user self-declares ready, pin the session down into a spec the brainstorming
+skill can consume. The spec is a **faithful record**, not a green light: it carries the
+settled decisions *and* the dissents and open questions, with their reasoning intact.
+
+1. **Draft.** From the checkpoint, the chairman writes a draft to
+   `docs/elenchus/<slug>-spec-draft.md` covering:
+   - **Premise & goal** — what's being built and the *why* behind it.
+   - **Settled decisions** — each decision that survived stress-test, with the
+     reasoning that made it hold (not flattened to a bare assertion).
+   - **Grounded frameworks / APIs** — what was checked against current docs, and how firm.
+   - **Constraints & non-goals** surfaced during the rounds.
+   - **Preserved dissents** — where the seats split, *both* positions and the condition
+     under which each wins. Never smooth these into "agreed."
+   - **Open questions / study path** still outstanding (if the user chose to spec anyway).
+2. **Verify (Round 3 — full parallel council).** Dispatch the seats via the engine with
+   `templates/round-3-spec-check.md`, giving each the **session record + the draft**.
+   They audit fidelity, not the design (`CAPTURED FAITHFULLY / MISSING / MISREPRESENTED`).
+   Anonymize and synthesize as in any round.
+3. **Revise.** The chairman fixes every `MISSING` / `MISREPRESENTED` finding — restoring
+   dropped decisions, un-smoothing dissent, removing invented certainty. Re-verify if the
+   revisions were substantial.
+4. **Finalize on the user's say-so.** Present the verified draft. **Only after the user
+   confirms**, the chairman writes the final to
+   `docs/superpowers/specs/<YYYY-MM-DD>-<slug>.md` and records that path in the
+   checkpoint's `spec_path`. The user owns this call — do not write into `specs/` or
+   treat the spec as a build green light without explicit confirmation. Then point the
+   user at the **brainstorming skill** over that spec file.
 
 ## Common mistakes (build front end)
 
@@ -127,3 +167,9 @@ path**.
 - Letting the chairman declare the design ready. Readiness is the user's call.
 - Writing state only at the end (lose it on `/clear`) instead of during the round.
 - Smoothing a genuine bottom-line split between seats into "they basically agree."
+- Smoothing that same split *out of the spec* — dropping a preserved dissent or open
+  question so the spec reads cleaner than the session actually was.
+- Writing the spec yourself and skipping the Round 3 council verification, or treating
+  its `CAPTURED FAITHFULLY` as a readiness sign-off rather than a fidelity check.
+- Writing the final into `docs/superpowers/specs/` (or calling the spec a green light to
+  build) before the user explicitly confirms. Drafting and placement are different calls.
