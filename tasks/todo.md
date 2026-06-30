@@ -1,166 +1,85 @@
-# Plan — Refine elenchus-study Round 1: chairman proposes a phased study roadmap
+# Add macro-clarification + custom seat roster to elenchus-build
 
 ## Goal
-Change Round 1 (link gathering) so that, **before any deliverable markdown file is
-written**, the chairman:
-1. takes the seats' gathered **valid links only**,
-2. **organizes them into categories**,
-3. **proposes a phased study roadmap** (Phase A / B / C… — letter labels, neutral
-   order, content in a sensible learning sequence),
-4. **iterates with the user in-chat until they explicitly approve**, and
-5. **only then saves** a new `docs/elenchus-study/<slug>-study-plan.md`.
+Before Round 1, the **chairman** (main thread) should:
 
-Seats' job narrows to *gathering valid grounded links*; all organizing, categorizing,
-and sequencing is the **chairman's** job.
+1. **Ask macro clarifying questions one-by-one IN CHAT** to build a *macro vision* of
+   the project, so the council seats — who are strong on architecture/tools/logic but
+   **rarely touch frontend** — ask better-grounded questions covering more aspects.
+   Topics: platform (web / mobile / desktop / CLI / multiplatform), frontend stack,
+   backend & services, target users / scale, greenfield vs existing. Offer to dispatch
+   **elenchus-study** when a framework choice is undecided (benchmark on community feedback).
+2. **Propose a grounded seat roster** as a SEPARATE question after the clarifying ones:
+   how many seats + which model mix + a **per-seat lens** (e.g. "2 opus on frontend
+   because…, 4 sonnet on backend because…, 1 haiku verifying macro alignment / missing
+   aspects…"). Reasoning must be grounded in the user's answers, not guessed. User
+   approves or specifies manually.
+
+Then dispatch that approved roster, injecting the macro vision into every seat's prompt.
+
+## Key design decisions (pin down — confirm before I build)
+- **Clarifying Q&A is in-chat, one question at a time** (not one markdown file per
+  question). But it IS recorded into the existing checkpoint markdown, maintaining the
+  "who asked / who answered" format — appended as each answer comes in, before any /clear.
+- **Roster overrides the engine default.** Engine hardcodes "one seat per tier
+  (opus/sonnet/haiku)." Build mode replaces that with the **user-approved roster**:
+  variable seat count, any model mix, each seat carrying a **lens**. Honest-labeling
+  (same-vendor, not truly independent) and graceful-degradation rules still apply.
+- **Lens is injected at dispatch**, not baked into a new template. The chairman adds the
+  seat's assigned lens + the macro vision to the composed Round-1 prompt. Round-1 template
+  gets a short LENS/MACRO-CONTEXT note so seats stay inside their lens while holding the
+  macro view. No engine round-schema changes.
+- This is a **build-mode-only** change (study/gather keep their own pre-round flows).
+  Engine SKILL.md gets one small note that a front end MAY supply a custom roster;
+  the loop, anonymization, synthesis, gate are untouched.
 
 ## Decisions (confirmed with user)
-- **Phase ordering:** letter-labeled `Phase A / B / C…`, presented in letter order;
-  content arranged in a sensible learning sequence (letters = neutral labels).
-- **Ranking rule:** **RELAXED for study mode.** The chairman may now propose a
-  recommended learning sequence (the roadmap). This rewrites the current "present
-  unranked / no 'start here' / ordering is a verdict" rule — for study mode only.
-  (The terminal "no 'you've learned it' verdict" is untouched.)
-- **Save target:** new `docs/elenchus-study/<slug>-study-plan.md` for the roadmap;
-  `<slug>-resources.md` stays the raw deduped link list.
-- **Revise loop:** propose in-chat → user can request changes any number of times →
-  save the study-plan file **only after explicit approval**.
+- Roster: **propose freely + one-line cost note**, user trims.
+- Decorrelation: **lenses decorrelate within a tier** (repeated tiers OK if lenses differ);
+  honest-labeling note stays.
 
-## Durability resolution (flagging for your OK)
-The skill's discipline is "write durable state DURING the round, before /clear."
-That conflicts with "save nothing before approval." Proposed reconciliation:
-- **Checkpoint `<slug>.md`** and **`<slug>-resources.md` (raw deduped links)** are
-  written **during the round** for durability — they carry no verdict, so they're safe
-  to persist early.
-- **`<slug>-study-plan.md` (the roadmap = the recommendation)** is the only artifact
-  gated on user approval.
-This honors both "only then save *the plan*" and "don't lose work on /clear."
-
-## Files to edit (each in repo archive + global runtime mirror)
-1. `skills/elenchus-study/SKILL.md`  ·  `~/.claude/skills/elenchus-study/SKILL.md`
-   - Intro: rewrite "presents without ranking / a 'start here' is a verdict" for the
-     relaxed study-mode roadmap behavior.
-   - Inverted-loop diagram (R1): add categorize → propose roadmap → revise → save.
-   - "Round templates" R1 bullet: seats gather valid links only; chairman categorizes
-     + proposes the phased roadmap; user revises; save after approval.
-   - Checkpoint-files section: add `<slug>-study-plan.md`; state the durability split.
-   - Common mistakes: reframe the "chairman ranking" item — in study mode the chairman
-     DOES propose a sequenced roadmap, but (a) seats never rank, (b) the plan file is
-     never written before the user approves it.
-2. `skills/elenchus-study/templates/round-1-resources.md`  ·  global mirror
-   - Narrow the seat task to "valid, grounded links only — no structure, no plan, no
-     ordering; the chairman builds the roadmap." Keep `COVERAGE GAPS` (tells the
-     chairman where material is thin). Keep grounding/no-fabrication rules.
-
-## Testing (writing-skills Iron Law — no skill edit without a test)
-- Baseline (RED): current R1 behavior — seats gather → chairman dedups → writes
-  resources.md immediately, no roadmap, no revision gate.
-- After (GREEN): dry-run R1 against a sample topic (e.g. "software architecture
-  fundamentals") in a fresh session and confirm: seats return links only; chairman
-  proposes Phase A/B/C roadmap; no `-study-plan.md` exists until I approve; file
-  appears only after approval. (Fresh session required — agents register at start.)
-- Record the run under `docs/validation/runs/` per `docs/validation/harness.md`.
-
-## Open question for you
-- Keep `COVERAGE GAPS` in the seat schema (my recommendation — it helps the chairman
-  spot thin categories), or strip it so seats truly return "links only"?
+## Todo
+- [x] Add `## Macro clarification (before Round 1)` to `elenchus-build/SKILL.md`
+- [x] Add `## Seat roster (proposed, then approved)` section
+- [x] Update `## Premise shaping` to hand into macro clarification (don't dispatch yet)
+- [x] Update `templates/round-1-questions.md` with LENS + MACRO-CONTEXT injection note
+- [x] Checkpoint frontmatter: `platform`, `macro:` block, `seats:` as `{model, lens}` list;
+      Clarifying Q&A body section
+- [x] Engine `elenchus-council/SKILL.md`: note that a front end MAY supply a custom roster
+- [x] `## Common mistakes`: skipping clarification, fixed-3 without roster, question dump,
+      duplicate tier w/o distinct lens
+- [x] Mirror all edits to repo archive (verified in sync via diff)
+- [x] **GREEN:** spot-test a frontend-lens seat — PASSED (see Review)
 
 ## Review — done
 
-**What changed (Round 1 now ends in a user-revised roadmap, not an auto-saved list):**
-- **Seat job narrowed to valid links only.** `round-1-resources.md` now tells seats they
-  gather links and explicitly **do not** organize/categorize/order/plan. Added a `covers:`
-  field per link (tag the sub-area) and a directive to **span the sub-areas for depth**.
-  Renamed `COVERAGE GAPS` → `THIN SUB-AREAS` (sub-areas searched but found weak).
-- **Chairman builds the roadmap.** New *Round 1 roadmap* section in SKILL.md: dedup →
-  organize into categories (driven by `covers:` tags) → propose **Phase A/B/C…** (neutral
-  letter labels, contents in a sensible learning sequence) → **revise in-chat until the
-  user approves** → only then save the plan file.
-- **Ranking rule relaxed for study mode** in the intro: the council gathers a spread; the
-  chairman proposes a sequenced roadmap — framed as a *proposal the user shapes*, not a
-  verdict. (Terminal "you've learned it" verdict still never the council's.)
-- **Third artifact + durability split.** Added `<slug>-study-plan.md` (approved roadmap,
-  written only post-approval). Checkpoint + raw `-resources.md` still written during the
-  round (no recommendation in them). Resume: presence of `-study-plan.md` = roadmap
-  approved; if missing but `-resources.md` exists, re-propose from saved links without
-  re-dispatching seats.
-- **Common mistakes** reframed: seats categorizing/ordering/planning; saving the plan
-  before approval; phases ordered by "quality" / labeled "start here."
+**What changed (build mode now runs a chairman-led pre-Round-1 phase):**
+- **Macro clarification** — before dispatching, the chairman asks macro questions **one at a
+  time in chat** (platform, frontend stack, backend/services, users/scale, greenfield),
+  records each into the checkpoint's new *Clarifying Q&A* section as it lands, and **offers
+  elenchus-study** when a framework is undecided. Purpose: give the seats a macro vision so
+  they cover the **frontend they normally skip**, not just the backend.
+- **Seat roster (proposed → approved)** — a separate step after clarification. The chairman
+  proposes a grounded count + model mix + **per-seat lens** (frontend / backend slice /
+  integrations / macro-alignment) with reasoning tied to the user's answers, propose-freely
+  + one-line cost note. User approves or specifies. This **overrides the engine's fixed
+  opus/sonnet/haiku trio**; repeated tiers are allowed when each carries a distinct lens.
+- **Lens + macro context injected at dispatch** — Round-1 template gained a LENS/MACRO-CONTEXT
+  note; no new round schema. Checkpoint frontmatter gained `platform`, a `macro:` block, and
+  `seats:` as a `{model, lens}` roster list.
+- **Engine** got one note: a front end MAY supply a custom roster overriding one-per-tier;
+  loop/anonymization/synthesis/gate untouched.
 
-**Files touched (repo + global mirror, verified in sync):**
-- `skills/elenchus-study/SKILL.md` (+ `~/.claude/skills/elenchus-study/SKILL.md`)
-- `skills/elenchus-study/templates/round-1-resources.md` (+ global mirror)
+**Files touched (global runtime + repo archive, verified in sync via diff):**
+- `skills/elenchus-build/SKILL.md`
+- `skills/elenchus-build/templates/round-1-questions.md`
+- `skills/elenchus-council/SKILL.md`
 
-**Testing status (honest):**
-- Edits reviewed for coherence end-to-end; repo↔global parity confirmed via `diff`.
-- **No live convene run yet** — a real R1 dry-run needs a **fresh session** (agents/skills
-  register at startup). Recommended GREEN check next session: convene on a sample topic and
-  confirm seats return links-only with `covers:` tags; chairman proposes Phase A/B/C; no
-  `-study-plan.md` exists until approval; file appears only after approval. Record under
-  `docs/validation/runs/`.
-- Not committed (commit-only-when-asked).
+**Testing (writing-skills GREEN):** dispatched one `council-seat` (opus, **frontend lens**,
+multiplatform Flutter + Supabase offline premise). It asked frontend-specific Socratic
+questions (conflict-resolution UI, draft/autosave survival, Flutter-web offline limits,
+queued photo uploads), used the macro context to ground them, cited current docs
+(PowerSync/Brick/Supabase Storage TUS), and issued no verdict. Behaves as intended.
+A full multi-tier live convene still needs a fresh session (agents register at startup).
 
----
----
-
-# (Archived) Prior plan — Templatize the council + add elenchus-study
-
-## Goal
-Two outcomes:
-1. **Kill the static `council-seat` agent as the "persona."** Replace it with a
-   **composable template system** the chairman reads before dispatching, so each of the
-   three tiers (Opus/Sonnet/Haiku) can get tier-tuned prompts and each mode can define its
-   own rounds.
-2. **Make the engine genuinely mode-agnostic** (today it bakes build-specific round schemas
-   into its body) so a new **`elenchus-study`** front end can reuse the same 2+N-round loop
-   for research.
-
-Guiding constraint (global): **simplicity** — smallest change that works; no new infra
-unless proven necessary.
-
-## Honest answer on the dedup hook
-**Not needed.** The chairman dedups the round-1 resource links inline (normalize
-http/https + www + trailing slash, then collapse). A hook only pays off if dedup must be
-deterministic or runs over dozens of links; neither holds. Ship without it; revisit only if
-inline dedup visibly fails at scale.
-
-## Composition model
-`dispatch prompt = seat-base (engine) + round template (front end/mode) + tier adapter
-(engine) + premise/topic + round indicator`.
-The chairman **reads the relevant templates first**, composes, inlines per seat. The
-registered `council-seat` agent becomes a **thin sandbox** (restricted tools, no recursion,
-"follow the chairman's dispatch prompt exactly") — NOT the persona.
-
-## Forks — RESOLVED
-- **A. Template location → HYBRID.** Shared `seat-base` + `tiers` in
-  `elenchus-council/templates/`; each front end owns its round templates in
-  `<front-end>/templates/`.
-- **B. Seat sandbox → THIN `council-seat` agent.** Keep it registered, strip to a
-  restricted-tools/no-recursion sandbox; persona+rounds+tiers come from the chairman's
-  composed prompt.
-- **C. Scope → PHASE 1 ONLY this session** (todos 1–5). Study skill is a follow-up.
-
-## Todo (Phase 1 — engine becomes template-driven, build still works) — DONE
-- [x] 1. `elenchus-council/templates/seat-base.md` — mode-agnostic seat persona.
-- [x] 2. `elenchus-council/templates/tiers.md` — per-tier adapter table (Opus/Sonnet/Haiku).
-- [x] 3. Generalized `elenchus-council/SKILL.md`: removed baked build round schemas; added
-  "Templates & composition"; generalized the intro + loop diagram to N-round/mode-agnostic.
-- [x] 4. `council-seat.md` → thin sandbox agent; removed the drifting 3rd copy
-  (`skills/elenchus-council/council-seat.md` + global); canonical `agents/` + `.claude/agents/`
-  mirror in parity.
-- [x] 5. `elenchus-build` round templates added; SKILL.md points at them; behavior unchanged.
-- [x] 6. Global installs synced; CLAUDE.md documents the composition convention.
-
-## Todo (Phase 2 — new elenchus-study skill) — DONE
-- [x] 6–9. SKILL.md, 3 round templates, global sync, review (see review below).
-
-## Review — Phase 1 done
-- Seat prompt is now **composed**, not one static agent. Engine is mode-agnostic (no round
-  schemas). `council-seat` is a thin sandbox. New `elenchus-council/templates/{seat-base,tiers}`.
-
-## Review — Phase 2 done (elenchus-study, via /writing-skills TDD)
-- **RED:** "convene a research council to learn X" was hijacked by elenchus-build; a seat
-  returned prose with no URLs/types + a verdict.
-- **GREEN:** new study SKILL.md + 3 round templates; NOT-clause added to build's description.
-  Comprehension + Haiku R1 tests passed (grounded URLs, spread, no ranking).
-- **Open notes:** restart required to convene; dedup hook not built (by design); not committed;
-  no study validation-harness fixtures yet.
+**Not committed** (commit-only-when-asked).

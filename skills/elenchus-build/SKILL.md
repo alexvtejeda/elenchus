@@ -46,7 +46,63 @@ where it's thin. Draw out:
 3. **The key frameworks / APIs / services** they intend to use.
 4. **Scope:** a feature on an existing app, or an app from scratch.
 
-Pass this to the engine as the premise. Don't pre-critique it.
+This is the premise. Don't pre-critique it — but **don't dispatch on it yet either.**
+First run **Macro clarification** below to give the seats a macro vision, then propose a
+**Seat roster**. Both happen in the chairman thread, before Round 1.
+
+## Macro clarification (before Round 1)
+
+The seats are strong on **architecture, tools, and logic** but **rarely reach for the
+frontend** on their own. So before dispatching, the chairman builds a **macro vision** of
+the project and feeds it into every seat's prompt — that is what lets the seats ask
+grounded questions across *all* the project's aspects (frontend included), not just the
+backend slice they gravitate to.
+
+**Ask the macro questions one at a time, in chat.** Do **not** dump a list, and do **not**
+spin up one markdown file per question. Ask one, wait for the answer, ask the next. Record
+each Q&A into the checkpoint's *Clarifying Q&A* section as it lands (chairman asked / user
+answered), so it survives a `/clear`.
+
+Cover at least these axes — skip any the premise already settled, follow up where an answer
+opens a new gap:
+
+- **Platform.** Web app? Mobile (one OS or multiplatform)? Desktop (which framework)? CLI?
+  A mix? "Is this multiplatform, or one target first?"
+- **Frontend stack.** Framework / rendering model / component system in mind — or undecided.
+- **Backend & services.** Runtime, data store, third-party APIs, auth, hosting.
+- **Users & scale.** Who uses it, how many, what's the load-bearing UX path.
+- **Greenfield vs existing.** New build, or a feature inside a running system with constraints.
+
+**When a framework choice is undecided, offer elenchus-study.** If the user is unsure which
+framework/library to pick, say so and offer to dispatch **elenchus-study** to benchmark the
+candidates on community feedback before continuing — don't guess one into the premise.
+
+## Seat roster (proposed, then approved)
+
+After the clarifying questions — as a **separate** step — the chairman proposes a seat
+roster, then the user approves or edits it. The engine's default is one seat per tier
+(opus/sonnet/haiku); build mode **replaces that with the approved roster**: any seat count,
+any model mix, each seat carrying a **lens**.
+
+**Propose, grounded in the answers — never guessed.** State the count, the model per seat,
+and *why each lens earns its seat*, tied to what the user actually said. Example shape:
+
+> "Here's my proposed roster — 2 opus, 4 sonnet, 1 haiku. The two opus seats take the
+> **frontend** (you're going multiplatform Flutter, that's where the load-bearing risk
+> is). Three sonnet seats split the **backend** (sync engine, data model, auth). One sonnet
+> takes **integrations** (the Stripe + push pieces). The haiku seat is a **macro-alignment**
+> check — it holds the whole picture and flags aspects the others missed. Roughly N seat-calls
+> per round."
+
+- **Propose freely; add a one-line cost note** (≈ seat-calls per round) and let the user trim.
+- **Lenses do the decorrelating within a tier.** Repeated tiers are fine (e.g. 4 sonnet) —
+  give each a **distinct lens** (frontend / a specific backend slice / integrations /
+  macro-alignment) so they don't collapse onto the same answer. The engine's honest-labeling
+  still holds: same vendor, better than one model, not truly independent.
+- **The user owns the final roster.** They approve as-is or specify their own count, models,
+  and lens split. Record the approved roster in the checkpoint (`seats:` as `{model, lens}`).
+- **Graceful degradation unchanged:** if an approved tier can't be reached, drop that seat,
+  say so, never silently re-assign its lens to a duplicate model.
 
 ## Round templates (build mode)
 
@@ -54,10 +110,12 @@ The engine composes each seat's prompt from `seat-base` + a **round template thi
 skill owns** + the tier adapter (see `elenchus-council` → *Templates &
 composition*). Build mode supplies three:
 
-- **Round 1 — `templates/round-1-questions.md`.** Lens: architecture. The biting
-  questions a senior reviewer would ask about *this* design (the un-named failure
-  mode, the edge case, "can you actually explain this part?"). Schema:
-  `QUESTIONS / UNEXAMINED ASSUMPTIONS / WHERE TO LOOK`.
+- **Round 1 — `templates/round-1-questions.md`.** The biting questions a senior reviewer
+  would ask about *this* design (the un-named failure mode, the edge case, "can you actually
+  explain this part?"). Schema: `QUESTIONS / UNEXAMINED ASSUMPTIONS / WHERE TO LOOK`. **The
+  chairman injects, per seat, that seat's assigned LENS (from the roster) and the MACRO
+  CONTEXT (from the clarifying Q&A)** into the composed prompt — so each seat asks within its
+  lens (including the frontend the seats normally skip) while holding the whole-project view.
 - **Round 2 — `templates/round-2-stress-test.md`.** Stress-test the user's answers
   for contradictions, unjustified leaps, and hand-waving. Schema:
   `HOLDS UP / DOESN'T HOLD / STILL OPEN`.
@@ -95,7 +153,16 @@ artifact: elenchus-build-session
 premise: "<one-line premise>"
 ready: false          # the USER self-declares this true; the council never sets it
 round: 1              # 1 = questions posed, awaiting answers · 2 = answers stress-tested
-seats: [opus, sonnet, haiku]
+platform: "<web | mobile | desktop | cli | multiplatform | ...>"   # from clarifying Q&A
+macro:                # the macro vision injected into every seat (from clarifying Q&A)
+  frontend: "<stack or 'undecided'>"
+  backend: "<runtime/data/services>"
+  users_scale: "<who / how many / load-bearing path>"
+  greenfield: <true|false>
+seats:                # the USER-approved roster (replaces the engine's one-per-tier default)
+  - {model: opus,   lens: frontend}
+  - {model: sonnet, lens: backend-sync}
+  - {model: haiku,  lens: macro-alignment}
 frameworks: [...]     # tools/APIs the seats grounded via Context7/web
 open_questions: [Q1, Q2, ...]   # ids unanswered or returned "I don't know"
 resolved: [...]
@@ -106,10 +173,11 @@ updated: <date>
 ---
 ```
 
-Body: the premise; questions grouped **by category** (anonymized — strip which
-seat asked), each with an id; an **answers** section; a **stress-test**
-section (held / didn't hold / still open + contradictions); and the **study
-path**.
+Body: the premise; a **Clarifying Q&A** section (each macro question the chairman asked
+in chat + the user's answer, in order — written as it lands, before any `/clear`); the
+Round-1 questions grouped **by category** (anonymized — strip which seat asked), each with
+an id; an **answers** section; a **stress-test** section (held / didn't hold / still open +
+contradictions); and the **study path**.
 
 ## Terminal
 
@@ -162,6 +230,14 @@ settled decisions *and* the dissents and open questions, with their reasoning in
 
 - Answering the architecture question directly because it "seems simple" instead
   of convening the council.
+- Skipping the macro clarification and dispatching seats with no macro vision — so the
+  seats ask only backend questions and the frontend goes unexamined.
+- Dumping all the clarifying questions at once, or spinning up a markdown file per
+  question, instead of asking them one at a time in chat.
+- Dispatching the fixed three opus/sonnet/haiku seats without proposing a roster, or
+  proposing a roster the user never approved.
+- Repeating a tier across seats without giving each a **distinct lens** — duplicate models
+  with the same lens are one model in a costume.
 - Converting "the user can't explain their own design" into "a small gap I'll
   teach, then they can start." Surface the study path; withhold the green light.
 - Letting the chairman declare the design ready. Readiness is the user's call.

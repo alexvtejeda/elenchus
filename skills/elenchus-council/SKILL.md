@@ -96,6 +96,11 @@ downstream depends on *how* seats are reached.
   `model: opus` · `model: sonnet` · `model: haiku`. Three tiers (top /
   strong-mid / fast-small) are more decorrelated than near-twins and the fast
   tier cuts per-loop cost.
+- **A front end MAY supply a custom roster** (a different seat count, model mix, and a
+  per-seat *lens*) that overrides this one-per-tier default — e.g. build mode lets the user
+  approve a roster after macro clarification. When a roster repeats a tier, the front end is
+  responsible for giving each such seat a **distinct lens** so they stay decorrelated; the
+  honest-labeling and graceful-degradation rules below apply unchanged.
 - **Honest labeling:** these seats share one vendor and alignment regime. This
   is a *same-vendor* council — better than a single model, not truly
   independent. Do not oversell the decorrelation in synthesis.
