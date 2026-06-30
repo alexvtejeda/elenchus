@@ -144,6 +144,13 @@ One markdown file per premise is the durable record that survives a `/clear`.
   session (`ready: false`) matching the premise. If found, resume from its
   `round`: read the premise + open questions back to the user and collect their
   answers, then dispatch Round 2. If none, start Round 1.
+- **Ask the Round-1 questions one at a time, in chat — same as the clarifying phase.**
+  The questions live in the checkpoint markdown, but the user answers them **in
+  conversation, one by one**, not by editing the file or replying to a dumped list.
+  Read one question (keep its id and which category it came from), wait for the answer,
+  record it in the checkpoint's answers section, then ask the next. This is the default
+  flow for every new user, not a per-user preference. "I don't know" is a valid answer —
+  log it and move on. Only after the last question dispatch Round 2.
 
 Frontmatter schema (mirrors the readiness-session prototype):
 
@@ -234,6 +241,9 @@ settled decisions *and* the dissents and open questions, with their reasoning in
   seats ask only backend questions and the frontend goes unexamined.
 - Dumping all the clarifying questions at once, or spinning up a markdown file per
   question, instead of asking them one at a time in chat.
+- Dumping all the Round-1 council questions for the user to answer in one block (or
+  telling them to edit the checkpoint), instead of asking them one by one in chat. The
+  questions are stored in markdown; they are *answered* in conversation, one at a time.
 - Dispatching the fixed three opus/sonnet/haiku seats without proposing a roster, or
   proposing a roster the user never approved.
 - Repeating a tier across seats without giving each a **distinct lens** — duplicate models
