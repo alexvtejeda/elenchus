@@ -67,15 +67,22 @@ engine loop unchanged.
 
 ## Durable state (checkpoints)
 
+**All three front ends write under `docs/elenchus/`** (a single shared convention). These
+files are private session scratch, so each front end **ensures `docs/elenchus/` is in the
+caller project's `.gitignore`** (appending the line, creating the file if needed) before
+writing its first checkpoint — the README documents this for users too. The one exception is
+gather's `-corpus.*` file, a real deliverable the user can `git add -f` if they want it committed.
+
 `elenchus-build` writes a per-premise checkpoint to `docs/elenchus/<premise-slug>.md`
 **during the round, before the user clears context** — so it survives `/clear` and `/compact`.
 On re-invoke, the skill reads the checkpoint, and if it's open (`ready: false`) resumes from
 the saved round. **Never** rely on SessionEnd hooks to persist state (their ~1.5s timeout can
 drop the write).
 
-`elenchus-study` writes **two** files per topic under `docs/elenchus-study/`:
+`elenchus-study` writes **three** files per topic under `docs/elenchus/`:
 `<topic-slug>.md` (session checkpoint) + `<topic-slug>-resources.md` (the Round-1 deduped
-resource list). Same resume-on-invoke + survive-`/clear` discipline as build mode.
+resource list) + `<topic-slug>-study-plan.md` (the approved phased roadmap). Same
+resume-on-invoke + survive-`/clear` discipline as build mode.
 
 `elenchus-gather` writes **two** files per corpus under `docs/elenchus/`:
 `<corpus-slug>-gather.md` (session checkpoint + coverage report) + `<corpus-slug>-corpus.<yaml|json|md>`

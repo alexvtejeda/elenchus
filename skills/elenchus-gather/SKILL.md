@@ -112,7 +112,13 @@ each seat a slice of the buckets (still one tier each). Same `council-seat`/
 
 ## The checkpoint + corpus files (durable state)
 
-Two files per corpus, both under `docs/elenchus/`:
+Two files per corpus, both under `docs/elenchus/`.
+
+**Gitignore `docs/elenchus/` first.** The checkpoint is private session scratch. Before
+writing it, ensure the caller project's `.gitignore` contains a `docs/elenchus/` line —
+append it if missing (create `.gitignore` if there is none). Do this once per session;
+don't duplicate the line. (The corpus file is a real deliverable — if the user wants it
+committed, they can force-add it with `git add -f`.)
 
 - **Session checkpoint:** `docs/elenchus/<corpus-slug>-gather.md` — frontmatter below +
   the brief, coverage report, and dropped/thin notes. Written **during** the round,

@@ -151,6 +151,10 @@ One markdown file per premise is the durable record that survives a `/clear`.
 
 - **Path:** `docs/elenchus/<premise-slug>.md` (slug = lowercase, hyphenated, from
   the premise; e.g. `docs/elenchus/pelu-geocoding.md`).
+- **Gitignore `docs/elenchus/` first.** These checkpoints are private session scratch,
+  not artifacts to commit. Before writing the first checkpoint, ensure the caller
+  project's `.gitignore` contains a `docs/elenchus/` line — append it if missing (create
+  `.gitignore` if there is none). Do this once per session; don't duplicate the line.
 - **Write it DURING the round, before the user clears** — never rely on a
   `SessionEnd` hook. After Round 1, write the premise + anonymized, categorized
   questions, then tell the user to `/clear` or `/compact` and re-invoke. After

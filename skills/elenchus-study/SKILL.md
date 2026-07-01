@@ -109,7 +109,7 @@ study-plan file:**
 4. **Revise with the user until they explicitly approve.** Present the roadmap, take
    their edits, re-present — loop as many times as they want. **Do not write the
    study-plan file before approval.**
-5. **Only on approval, save** `docs/elenchus-study/<topic-slug>-study-plan.md`.
+5. **Only on approval, save** `docs/elenchus/<topic-slug>-study-plan.md`.
 
 This is study mode's one deliberate relaxation of the engine's no-ranking stance: the
 chairman *may* sequence a learning path here — because it is a **proposal the user
@@ -118,7 +118,12 @@ never the council's to give.)
 
 ## The checkpoint files (durable state)
 
-Three files per topic, under `docs/elenchus-study/`:
+Three files per topic, under `docs/elenchus/`.
+
+**Gitignore `docs/elenchus/` first.** These files are private session scratch, not
+artifacts to commit. Before writing the first one, ensure the caller project's
+`.gitignore` contains a `docs/elenchus/` line — append it if missing (create `.gitignore`
+if there is none). Do this once per session; don't duplicate the line.
 
 - **`<topic-slug>.md`** — the session checkpoint (frontmatter + body). Survives a
   `/clear`. **Write it DURING the round, before the user clears** — never a
@@ -139,7 +144,7 @@ write it before the user has signed off on the roadmap.
 when two seats found the same thing. No hook — if inline dedup ever visibly fails at
 scale, revisit then.
 
-**Resume = scan-on-invoke.** When convened, Read `docs/elenchus-study/` for an open
+**Resume = scan-on-invoke.** When convened, Read `docs/elenchus/` for an open
 session (`ready: false`) matching the topic. If found, resume from its `round`. Within
 Round 1, the **presence of `<topic-slug>-study-plan.md` marks the roadmap as approved**:
 if it's missing but `-resources.md` exists, resume by re-proposing the roadmap from the

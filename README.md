@@ -98,3 +98,17 @@ have it stress-tested (e.g. *"review my architecture for X before I build"*). An
 questions the council surfaces, `/clear` or `/compact` when prompted, then re-invoke to
 stress-test your answers. Durable state for each premise lives in `docs/elenchus/<slug>.md`
 and survives a context clear.
+
+### Checkpoint files & `.gitignore`
+
+All three front ends write their session checkpoints under **`docs/elenchus/`** in your
+project. These are private working scratch, not artifacts to commit — the skills will add a
+`docs/elenchus/` line to your project's `.gitignore` automatically before writing the first
+checkpoint. If you'd rather set it yourself (or want to be sure), add:
+
+```gitignore
+docs/elenchus/
+```
+
+(The one deliverable worth keeping is gather's `docs/elenchus/<slug>-corpus.*` file — if you
+want that in version control, force-add it with `git add -f <path>`.)
