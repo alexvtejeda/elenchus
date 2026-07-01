@@ -77,6 +77,14 @@ opens a new gap:
 framework/library to pick, say so and offer to dispatch **elenchus-study** to benchmark the
 candidates on community feedback before continuing — don't guess one into the premise.
 
+**For a visual frontend-design question, hand off — don't decide it in prose.** When a
+question is genuinely *visual* (a layout, a component's look and feel, two design
+directions to compare — not a conceptual "which stack?"), dispatch the design thinking to
+the **`ui-ux-pro-max`** skill and render its options through the **`visual-companion`**
+skill so the user can *see* them in the browser. The user answers in the **terminal**;
+the browser is display-only. Keep conceptual/tradeoff/requirements questions in the chat
+as usual — this handoff is only for questions the user grasps better by seeing than reading.
+
 ## Seat roster (proposed, then approved)
 
 After the clarifying questions — as a **separate** step — the chairman proposes a seat
