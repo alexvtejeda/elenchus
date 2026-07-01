@@ -1,5 +1,7 @@
 # Elenchus
 
+[![Version](https://img.shields.io/github/v/release/alexvtejeda/elenchus?label=version)](https://github.com/alexvtejeda/elenchus/releases/latest)
+
 A Claude Code skill set that makes Claude **argue with itself before it agrees with you** —
 a Socratic council that stress-tests a build/architecture idea instead of handing you
 sycophantic reassurance. A chairman (your main thread) dispatches anonymized seats across
