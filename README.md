@@ -76,6 +76,19 @@ recommended.
 If `CONTEXT7_API_KEY` is unset, Context7 still runs keyless at lower rate limits, and the
 seats fall back to web search for grounding.
 
+## ui-ux-pro-max (recommended for frontend-design questions)
+
+For *visual* frontend-design questions, `elenchus-build` hands the design thinking to the
+**ui-ux-pro-max** skill (styles, palettes, font pairings, layout patterns) and renders the
+result through `visual-companion`. It's a separate, third-party skill — install it to get
+that path:
+
+- Repo: <https://github.com/nextlevelbuilder/ui-ux-pro-max-skill>
+
+Without it, Elenchus still runs fine; the chairman just designs without that extra
+intelligence. Note the seats never generate designs — the **chairman** runs ui-ux-pro-max
+**once** and pushes the single result to the browser, so this stays token-efficient.
+
 ## Usage
 
 In a Claude Code session in this repo, describe the app/feature you want to build and ask to

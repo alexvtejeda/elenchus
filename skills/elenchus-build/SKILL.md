@@ -85,6 +85,13 @@ skill so the user can *see* them in the browser. The user answers in the **termi
 the browser is display-only. Keep conceptual/tradeoff/requirements questions in the chat
 as usual — this handoff is only for questions the user grasps better by seeing than reading.
 
+**The chairman does the design once — the seats do not.** The council seats only surface
+the *visual requirements and critique* as text (that is all their round schemas produce, and
+they cannot dispatch subagents). **Do not ask every seat to generate or push a mockup** —
+that fans out N redundant designs and burns tokens. Instead the **chairman alone** takes the
+seats' requirements, runs `ui-ux-pro-max` **one time** to produce the design/options, and
+pushes that single result through `visual-companion`. Seats gather; the chairman renders.
+
 ## Seat roster (proposed, then approved)
 
 After the clarifying questions — as a **separate** step — the chairman proposes a seat
