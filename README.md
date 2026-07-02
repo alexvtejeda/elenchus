@@ -2,13 +2,25 @@
 
 [![Version](https://img.shields.io/github/v/release/alexvtejeda/elenchus?label=version)](https://github.com/alexvtejeda/elenchus/releases/latest)
 
+![Elenchus — a chairman surrounded by three council seats](assets/elenchus-banner.png)
+
 A Claude Code skill set that makes Claude **argue with itself before it agrees with you** —
 a Socratic council that stress-tests a build/architecture idea instead of handing you
-sycophantic reassurance. A chairman (your main thread) dispatches anonymized seats across
-model tiers (Opus / Sonnet / Haiku); they ask the biting questions your premise hasn't
-answered, you answer them, and they stress-test your answers. The council flags
-contradictions and gaps and points you at a study path — **you** decide when you're ready
-to build.
+sycophantic reassurance. **Elenchus is a critique engine, not an end-to-end scaffolding
+tool.** It's meant to *kickstart* a project, or to help you make a hard decision that will
+change the direction of an existing one — the moment before you commit, when a bad premise
+is cheapest to catch. It does not write your app; it interrogates your reasoning. A chairman
+(your main thread) dispatches anonymized seats across model tiers (Opus / Sonnet / Haiku);
+they ask the biting questions your premise hasn't answered, you answer them, and they
+stress-test your answers. The council flags contradictions and gaps and points you at a
+study path — **you** decide when you're ready to build.
+
+> **Need end-to-end scaffolding?** That's not Elenchus's job. For actually *building* the
+> thing, reach for a scaffolding framework like [superpowers](https://github.com/obra/superpowers)
+> or GSD. The two fit together in sequence:
+> use **`elenchus-study`** first to benchmark those (and other) options against your needs,
+> then let Elenchus stress-test your premise — and once you've got a spec out of an Elenchus
+> session, hand it to superpowers or GSD to scaffold and execute.
 
 See `docs/2026-06-02-elenchus-build-summary.md` for the v0.1 spec.
 
@@ -90,6 +102,22 @@ that path:
 Without it, Elenchus still runs fine; the chairman just designs without that extra
 intelligence. Note the seats never generate designs — the **chairman** runs ui-ux-pro-max
 **once** and pushes the single result to the browser, so this stays token-efficient.
+
+## Where `visual-companion` comes from
+
+`visual-companion` is **not original to Elenchus** — it's adapted from the **brainstorming**
+skill in Jesse Vincent's (obra's) `superpowers` repo. That skill is, quite literally, a
+markdown file plus a `scripts/` directory, which is what we reshaped here:
+
+- Skill source: <https://github.com/obra/superpowers/tree/main/skills/brainstorming>
+
+We kept its shape (a `SKILL.md` + the browser-companion `scripts/`) and made one substantive
+change: **we rewired the WebSocket feature so it only drives an automatic page refresh — it
+no longer records an immediate selection.** The reason is that the click-to-select path was
+unreliable, and you have to return to the terminal to finish the details anyway. So the
+browser is display-only: it auto-refreshes to show the latest frame, and you always **answer
+in the terminal**. How you arrange your windows (terminal + browser side by side, or on a
+second screen) is entirely up to you.
 
 ## Usage
 
