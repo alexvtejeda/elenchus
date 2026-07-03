@@ -17,12 +17,34 @@ study path — **you** decide when you're ready to build.
 
 > **Need end-to-end scaffolding?** That's not Elenchus's job. For actually *building* the
 > thing, reach for a scaffolding framework like [superpowers](https://github.com/obra/superpowers)
-> or GSD. The two fit together in sequence:
-> use **`elenchus-study`** first to benchmark those (and other) options against your needs,
-> then let Elenchus stress-test your premise — and once you've got a spec out of an Elenchus
-> session, hand it to superpowers or GSD to scaffold and execute.
+> or GSD. Elenchus **bookends** that build instead of replacing it — it critiques and verifies
+> at each seam where a wrong turn is expensive, and hands the scaffolding off in the middle:
+> use **`elenchus-study`** first to benchmark those (and other) options, let the council
+> **stress-test your premise**, then **`elenchus-plan`** to stress-test the resulting plan
+> against its spec. Hand that plan to superpowers or GSD to scaffold and execute — then run
+> **`finishing-implementation-elenchus`** to verify the built feature in the browser against
+> its spec and fix what's missing. Elenchus interrogates and verifies; it doesn't scaffold.
 
 See `docs/2026-06-02-elenchus-build-summary.md` for the v0.1 spec.
+
+## Pipeline
+
+Elenchus is a set of stages you drop into a build, not a single command. The council skills
+share one engine; `elenchus-plan` verifies the plan, and the finishing pass is a separate
+browser verify→fix loop after the code exists.
+
+```
+  elenchus-build / -study / -gather    →  stress-test the premise · research · harvest
+            │
+            ▼   (spec)
+  elenchus-plan                         →  stress-test the plan against its spec
+            │
+            ▼   (approved plan)
+  superpowers / GSD                     →  scaffold + execute   (not Elenchus)
+            │
+            ▼   (built feature)
+  finishing-implementation-elenchus     →  verify in the browser, fix what's missing
+```
 
 ## Components
 
@@ -32,8 +54,11 @@ See `docs/2026-06-02-elenchus-build-summary.md` for the v0.1 spec.
 | `skills/elenchus-build/` | The build/architecture front end over the engine. |
 | `skills/elenchus-study/` | The research/study front end (resources-first inverted loop). |
 | `skills/elenchus-gather/` | The harvest front end — builds a closed corpus of real, verified links/resources (fan-out → verify → dedup → coverage report). |
+| `skills/elenchus-plan/` | The plan/verification front end. Composes over the `writing-plans` skill for plan-authoring craft, then replaces its two solo steps — the fresh-eyes Self-Review becomes a **plan-check council round** (`COVERED / GAPS / DEFECTS` auditing the plan against the spec) and the Scope Check becomes a **deep-tier split suggestion returned to you for approval** before any plan file is written. |
+| `skills/finishing-implementation-elenchus/` | The post-execution stage (not a council front end). A **sequential verify→fix loop**: report-only verifier subagents drive the running app via **Playwright MCP** and report `PASSED / FAILED / NEEDS-HUMAN / MISSING` per checklist item; the **chairman implements the fixes**. Verifiers observe; only the chairman edits. |
 | `skills/visual-companion/` | Standalone browser companion — shows mockups/diagrams/side-by-side comparisons for *visual* questions while the user answers in the terminal (plain HTTP, no WebSockets). Dispatched by a front end (e.g. `elenchus-build` pairs it with `ui-ux-pro-max` for frontend-design questions). |
-| `agents/council-seat.md` | One generic council seat, dispatched 3× pinned to different model tiers (Opus / Sonnet / Haiku). |
+| `agents/council-seat.md` | One generic council seat, dispatched per tier (Opus / Sonnet / Haiku) by the four council front ends (`elenchus-build`, `-study`, `-gather`, `-plan`). |
+| `agents/finishing-verifier.md` | The report-only browser-verification sandbox used by `finishing-implementation-elenchus` — Playwright `browser_*` + Context7 + read tools, **no Write/Edit, no recursion** (report-only by construction). |
 
 ## Install
 
@@ -51,13 +76,18 @@ the skills (and the agent) into a location Claude Code actually scans. Pick **on
 For example, to install globally from a clone of this repo:
 
 ```sh
-cp -r skills/elenchus-council skills/elenchus-build skills/elenchus-study skills/elenchus-gather skills/visual-companion ~/.claude/skills/
-cp agents/council-seat.md ~/.claude/agents/
+cp -r skills/elenchus-council skills/elenchus-build skills/elenchus-study skills/elenchus-gather \
+      skills/elenchus-plan skills/finishing-implementation-elenchus skills/visual-companion ~/.claude/skills/
+cp agents/council-seat.md agents/finishing-verifier.md ~/.claude/agents/
 ```
 
 (For a per-project install, replace `~/.claude/` with `<your-project>/.claude/`.) The four
-Elenchus skills depend on the `council-seat` agent, so always copy it alongside them.
-`visual-companion` is optional (a display helper the front ends dispatch) and needs no agent.
+council front ends (`elenchus-build`, `-study`, `-gather`, `-plan`) and the shared engine
+depend on the `council-seat` agent; `finishing-implementation-elenchus` depends on the
+`finishing-verifier` agent instead — copy whichever agents match the skills you install (or
+both, to get everything). `visual-companion` is optional (a display helper the front ends
+dispatch) and needs no agent. The finishing pass also needs the Playwright MCP server (see
+[Playwright MCP](#playwright-mcp-for-the-finishing-pass) below).
 
 > **Restart required.** Claude Code registers agents and skills at session start. After
 > copying the files in (or after editing `council-seat.md`), **start a fresh Claude Code
@@ -89,6 +119,24 @@ recommended.
 
 If `CONTEXT7_API_KEY` is unset, Context7 still runs keyless at lower rate limits, and the
 seats fall back to web search for grounding.
+
+## Playwright MCP (for the finishing pass)
+
+`finishing-implementation-elenchus` drives your running app in a real browser, so its
+verifier subagents need the [Playwright](https://github.com/microsoft/playwright-mcp) MCP
+server. It's already wired in the repo's project-scoped `.mcp.json` (`npx @playwright/mcp@latest`,
+the same project scope as Context7) and ships no secrets. First-run, one-time setup:
+
+1. Approve the project-scoped `playwright` server (via `/mcp`, or restart `claude` and accept
+   the project-server prompt). A project MCP server is *pending approval* until you do — check
+   with `claude mcp list` (it should show `playwright ✔ Connected`, not `⏸ Pending approval`).
+2. Install the browser binary once: `npx playwright install chromium`.
+3. **Restart** Claude Code — MCP servers connect at session start.
+
+Until `playwright` shows `✔ Connected`, verifier seats have no browser tools and every
+checklist item comes back `NEEDS-HUMAN`. To reuse a logged-in session, add
+`--storage-state <path>` to the server's args in `.mcp.json`. The other Elenchus skills don't
+need Playwright — only the finishing pass does.
 
 ## ui-ux-pro-max (recommended for frontend-design questions)
 
@@ -129,14 +177,16 @@ and survives a context clear.
 
 ### Checkpoint files & `.gitignore`
 
-All three front ends write their session checkpoints under **`docs/elenchus/`** in your
-project. These are private working scratch, not artifacts to commit — the skills will add a
-`docs/elenchus/` line to your project's `.gitignore` automatically before writing the first
-checkpoint. If you'd rather set it yourself (or want to be sure), add:
+All the Elenchus skills — the four council front ends and the finishing pass — write their
+session checkpoints and run reports under **`docs/elenchus/`** in your project. These are
+private working scratch, not artifacts to commit — the skills will add a `docs/elenchus/`
+line to your project's `.gitignore` automatically before writing the first checkpoint. If
+you'd rather set it yourself (or want to be sure), add:
 
 ```gitignore
 docs/elenchus/
 ```
 
-(The one deliverable worth keeping is gather's `docs/elenchus/<slug>-corpus.*` file — if you
-want that in version control, force-add it with `git add -f <path>`.)
+Two outputs are real deliverables that live *outside* that ignored scratch: gather's
+`docs/elenchus/<slug>-corpus.*` corpus (force-add it with `git add -f <path>` if you want it
+tracked) and the plan files `elenchus-plan` writes to `docs/superpowers/plans/` (not ignored).
