@@ -96,7 +96,7 @@ pushes that single result through `visual-companion`. Seats gather; the chairman
 
 After the clarifying questions — as a **separate** step — the chairman proposes a seat
 roster, then the user approves or edits it. The engine's default is one seat per tier
-(opus/sonnet/haiku); build mode **replaces that with the approved roster**: any seat count,
+(fable/opus/sonnet/haiku); build mode **replaces that with the approved roster**: any seat count,
 any model mix, each seat carrying a **lens**.
 
 **Propose, grounded in the answers — never guessed.** State the count, the model per seat,
@@ -118,6 +118,15 @@ and *why each lens earns its seat*, tied to what the user actually said. Example
   and lens split. Record the approved roster in the checkpoint (`seats:` as `{model, lens}`).
 - **Graceful degradation unchanged:** if an approved tier can't be reached, drop that seat,
   say so, never silently re-assign its lens to a duplicate model.
+
+**Confirm the roster before EVERY dispatching round — not just Round 1.** Before dispatching
+*any* round (Round 1, Round 2 re-dispatch, **and Round 3 spec-check**), and on **resume** of an
+existing session, the chairman **presents the roster it intends to use and waits for the user's
+go-ahead before dispatching.** Reusing the checkpoint's saved roster is fine — but the user must
+still confirm it (or edit it) *this* round. On resume, re-state the saved roster and the per-seat
+lens/slice assignment for the upcoming round, and dispatch only after the user agrees. **Never
+dispatch seats on a silently-reused or newly-assumed structure.** This is a hard gate, same as the
+"answer questions one at a time" rule.
 
 ## Round templates (build mode)
 
@@ -263,8 +272,11 @@ settled decisions *and* the dissents and open questions, with their reasoning in
 - Dumping all the Round-1 council questions for the user to answer in one block (or
   telling them to edit the checkpoint), instead of asking them one by one in chat. The
   questions are stored in markdown; they are *answered* in conversation, one at a time.
-- Dispatching the fixed three opus/sonnet/haiku seats without proposing a roster, or
+- Dispatching the fixed four fable/opus/sonnet/haiku seats without proposing a roster, or
   proposing a roster the user never approved.
+- Re-dispatching a later round (Round 2, Round 3, or on resume) on a **silently-reused or
+  assumed roster** without re-confirming the structure with the user first — the roster gate
+  applies to *every* dispatching round, not only Round 1.
 - Repeating a tier across seats without giving each a **distinct lens** — duplicate models
   with the same lens are one model in a costume.
 - Converting "the user can't explain their own design" into "a small gap I'll

@@ -2,7 +2,7 @@
 name: council-seat
 description: >-
   A single anonymized seat on the Elenchus council — a thin sandbox the chairman
-  dispatches in parallel, one per model tier (Opus/Sonnet/Haiku). Its persona,
+  dispatches in parallel, one per model tier (Fable/Opus/Sonnet/Haiku). Its persona,
   round, and exact output schema arrive INSIDE the chairman's dispatch prompt
   (composed from the engine's seat-base + tier adapter + the front end's round
   template). Internal engine component — not for direct use.

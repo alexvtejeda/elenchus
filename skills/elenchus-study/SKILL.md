@@ -158,7 +158,7 @@ artifact: elenchus-study-session
 topic: "<one-line topic>"
 ready: false          # the USER self-declares this true; the council never sets it
 round: 1              # 1 = resources gathered + roadmap proposed/approved · 2 = grounding posed · 3 = challenged
-seats: [opus, sonnet, haiku]
+seats: [fable, opus, sonnet, haiku]
 resource_types: [...] # preferences elicited in topic shaping
 open_questions: [...] # grounding questions unanswered / returned "I don't know"
 study_path: [...]     # what to keep studying for any gap / "I don't know"

@@ -93,9 +93,10 @@ downstream depends on *how* seats are reached.
   thin sandbox; **compose each call's prompt** per **Templates & composition**
   below (seat-base + this round's front-end template + the seat's tier row).
 - Pin each seat to a different tier for decorrelation:
-  `model: opus` · `model: sonnet` · `model: haiku`. Three tiers (top /
-  strong-mid / fast-small) are more decorrelated than near-twins and the fast
-  tier cuts per-loop cost.
+  `model: fable` · `model: opus` · `model: sonnet` · `model: haiku`. Four tiers
+  (deep-reasoning / top / strong-mid / fast-small) are more decorrelated than
+  near-twins; the fast tier cuts per-loop cost, and the Fable seat takes the one
+  angle that rewards the longest reasoning chain (see `templates/tiers.md`).
 - **A front end MAY supply a custom roster** (a different seat count, model mix, and a
   per-seat *lens*) that overrides this one-per-tier default — e.g. build mode lets the user
   approve a roster after macro clarification. When a roster repeats a tier, the front end is
@@ -104,9 +105,11 @@ downstream depends on *how* seats are reached.
 - **Honest labeling:** these seats share one vendor and alignment regime. This
   is a *same-vendor* council — better than a single model, not truly
   independent. Do not oversell the decorrelation in synthesis.
-- **Graceful degradation (model access).** If a tier can't be reached, drop to
-  two seats and **say so** in the synthesis. Two honest seats beat three where
-  one silently collapsed onto another model. Never run a one-seat "council."
+- **Graceful degradation (model access).** If a tier can't be reached, drop that
+  seat and run the rest — and **say so** in the synthesis. Honest fewer seats beat
+  a full count where one silently collapsed onto another model. Fable is the most
+  likely to be slow/unavailable; the Opus/Sonnet/Haiku three is a valid degraded
+  run when named as such. Never run a one-seat "council."
 - **Named-agent fallback.** If `subagent_type: council-seat` errors with "agent
   type not found," the agent file was installed this session and isn't
   registered yet (see Install). Fall back to `subagent_type: general-purpose`

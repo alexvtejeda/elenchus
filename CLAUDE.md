@@ -21,9 +21,22 @@ giving sycophantic reassurance. Architecture:
   mode — premise-first), `elenchus-study` (research mode — resources-first inverted loop:
   gather → ground → challenge), and `elenchus-gather` (harvest mode — builds a closed
   corpus of verified links/resources: harvest → verify → dedup → coverage report, no
-  critique). Gather reuses the engine's fan-out + decorrelated seats + dedup + honesty,
-  but has no premise and asks the user nothing between rounds; the chairman additionally
-  re-verifies every URL before writing the corpus.
+  critique), and `elenchus-plan` (plan mode — spec-first: composes over the
+  `writing-plans` skill for plan-authoring craft, then **replaces its two solo steps**
+  — the "fresh eyes" Self-Review becomes a **plan-check council round**
+  (`COVERED / GAPS / DEFECTS` auditing the written plan against the spec), and the
+  Scope Check becomes a **deep-tier split suggestion returned to the user for approval
+  before any plan file is written**). Gather reuses the engine's fan-out + decorrelated
+  seats + dedup + honesty, but has no premise and asks the user nothing between rounds;
+  the chairman additionally re-verifies every URL before writing the corpus.
+- **Post-execution stage (not a council front end):** `finishing-implementation-elenchus`
+  runs *after* code is built. It is a **sequential verify→fix loop**, not the council
+  engine: report-only `finishing-verifier` subagents (a no-Write sandbox) drive the running
+  app via **Playwright MCP** and return a fixed schema (`PASSED / FAILED / NEEDS-HUMAN /
+  MISSING` per acceptance-checklist item); the **chairman implements the fixes** one by one;
+  repeat for N passes (default 3) + a free confirm pass. Verifiers observe the browser and
+  never edit code; the chairman never verifies — the two halves stay separate. Full pipeline:
+  `elenchus-build → brainstorming → elenchus-plan → execution → finishing-implementation-elenchus`.
 
 The tool never issues a verdict or green-lights a design — it surfaces contradictions, gaps,
 and a study path; the user decides when they are ready. Preserve this: when seats disagree,
@@ -33,27 +46,29 @@ basically agree."
 There is no build/test/lint step — this repo is markdown skill/agent definitions, config,
 and design docs.
 This repo is the home for Elenchus architecture/research planning: it version-controls the
-skill sources and the `council-seat` agent, and holds the design docs and validation harness.
+skill sources and the agents (`council-seat`, `finishing-verifier`), and holds the design
+docs and validation harness.
 
 ## Editing skills & agents — read before changing any SKILL.md or agent file
 
 **Skills and agents follow different rules — do not assume one mirroring convention.**
 
 - **Skills** (`skills/elenchus-build`, `skills/elenchus-study`, `skills/elenchus-gather`,
-  `skills/elenchus-council`):
+  `skills/elenchus-plan`, `skills/elenchus-council`, `skills/finishing-implementation-elenchus`):
   the copy Claude Code actually loads is the **global install** (`~/.claude/skills/`).
   Each front end owns its `templates/` (round schemas); the engine owns
   `templates/{seat-base,tiers}.md`. The top-level `skills/`
   tree in this repo is a **version-controlled archive** — editing it does **not** change
   runtime behavior. Sync any change to the global install too, or the runtime won't see it.
   There is **no `.claude/skills/`**.
-- **Agents** (`council-seat.md`): kept as **two copies**. Top-level `agents/` is canonical
-  (edit here); `.claude/agents/` is the **derived copy Claude Code loads at runtime**. After
-  editing the canonical file, **mirror it into `.claude/agents/`** or the runtime won't see it.
+- **Agents** (`council-seat.md` for the council; `finishing-verifier.md` for the finishing
+  skill): kept as **two copies**. Top-level `agents/` is canonical (edit here);
+  `.claude/agents/` is the **derived copy Claude Code loads at runtime**. After editing a
+  canonical agent, **mirror it into `.claude/agents/`** or the runtime won't see it.
 
 **Restart required.** Claude Code registers agents/skills at session start. After editing
-`council-seat.md`, **start a fresh session** before convening, or
-`subagent_type: council-seat` errors with "agent type not found."
+`council-seat.md` or `finishing-verifier.md`, **start a fresh session** before dispatching,
+or `subagent_type: <name>` errors with "agent type not found."
 
 **Seat prompts are composed from templates — the engine carries no round schemas.** The
 `council-seat` agent is a **thin sandbox** (restricted tools, no recursion); its persona,
@@ -90,12 +105,30 @@ resume-on-invoke + survive-`/clear` discipline as build mode.
 may be written during the round (it carries data, not a recommendation). Same
 resume-on-invoke + survive-`/clear` discipline.
 
-## Context7 MCP
+`elenchus-plan` writes a per-plan checkpoint to `docs/elenchus/<slug>-plan.md`
+(session state: the split proposal + the user's plan-count decision, the plan paths,
+and the plan-check `COVERED / GAPS / DEFECTS` + revisions). The **plan files** it
+produces land under `docs/superpowers/plans/` and are **real deliverables — not
+gitignored** (only the `docs/elenchus/` checkpoint is). Same resume-on-invoke +
+survive-`/clear` discipline.
 
-Seats ground frameworks/APIs against current docs via the Context7 MCP server, wired in
+`finishing-implementation-elenchus` writes one run report to
+`docs/elenchus/<slug>-finishing.md` (per-item PASSED/FAILED/NEEDS-HUMAN/MISSING across
+passes, the fixes the chairman implemented, verifier disagreements, and what remains for
+a human). It gitignores `docs/elenchus/` like the others. It has **no resume/checkpoint
+loop** — a finishing run is one bounded pass-loop, not a multi-session convene.
+
+## MCP servers (Context7 + Playwright)
+
+Seats ground frameworks/APIs against current docs via the **Context7 MCP** server, wired in
 `.mcp.json`. It reads `CONTEXT7_API_KEY` from the environment (set it in your shell profile);
 it runs keyless at lower rate limits and falls back to web search if unset. **Never commit
 the key** — it lives in `.env`, which is gitignored. The repo ships no key by design.
+
+The **Playwright MCP** server (`npx @playwright/mcp@latest`) is wired in the same
+repo-root `.mcp.json` (project scope — Claude Code has no skill-directory MCP scope). Only
+`finishing-implementation-elenchus`'s `finishing-verifier` seats use it, to drive the
+running app. Ships no secrets; add `--storage-state <path>` to reuse a logged-in session.
 
 ## Conventions
 

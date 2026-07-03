@@ -105,7 +105,7 @@ Gather mode supplies two; **both explicitly override seat-base's adversarial fra
 Context7 MCP. In gather mode the seats use them to **search and to verify liveness** —
 a real, current page must back every entry.
 
-**Dispatch & tiers:** per the engine — one seat per tier (`opus`/`sonnet`/`haiku`) for
+**Dispatch & tiers:** per the engine — one seat per tier (`fable`/`opus`/`sonnet`/`haiku`) for
 decorrelation, all in one message so they run in parallel. With many buckets, assign
 each seat a slice of the buckets (still one tier each). Same `council-seat`/
 `general-purpose` fallback rule as the engine.
@@ -140,7 +140,7 @@ artifact: elenchus-gather-session
 corpus: "<one-line: what corpus, for which consumer>"
 ready: false          # the USER self-declares this true; the chairman never sets it
 round: 1              # 1 = first harvest done · 2+ = gap-fill rounds
-seats: [opus, sonnet, haiku]
+seats: [fable, opus, sonnet, haiku]
 buckets: [...]            # the categories the corpus spans
 target_per_bucket: <n>
 inclusion: "<the validity bar, e.g. single-speaker, clean audio>"
