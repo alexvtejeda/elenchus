@@ -46,6 +46,12 @@ browser verify→fix loop after the code exists.
   finishing-implementation-elenchus     →  verify in the browser, fix what's missing
 ```
 
+For **terminal UIs** specifically, `elenchus-tui` is a standalone design+verify helper you
+can drop in at the design stage: it generates a pure-ASCII mockup (one runnable stdlib script
+with named, navigable states + a `.txt` snapshot each) and **proves each state renders** by
+driving it in an isolated tmux session — one report-only seat per breakpoint, in parallel;
+the chairman fixes what's misaligned. No browser, no MCP.
+
 ## Components
 
 | Path in this repo | What it is |
@@ -56,9 +62,11 @@ browser verify→fix loop after the code exists.
 | `skills/elenchus-gather/` | The harvest front end — builds a closed corpus of real, verified links/resources (fan-out → verify → dedup → coverage report). |
 | `skills/elenchus-plan/` | The plan/verification front end. Composes over the `writing-plans` skill for plan-authoring craft, then replaces its two solo steps — the fresh-eyes Self-Review becomes a **plan-check council round** (`COVERED / GAPS / DEFECTS` auditing the plan against the spec) and the Scope Check becomes a **deep-tier split suggestion returned to you for approval** before any plan file is written. |
 | `skills/finishing-implementation-elenchus/` | The post-execution stage (not a council front end). A **sequential verify→fix loop**: report-only verifier subagents drive the running app via **Playwright MCP** and report `PASSED / FAILED / NEEDS-HUMAN / MISSING` per checklist item; the **chairman implements the fixes**. Verifiers observe; only the chairman edits. |
+| `skills/elenchus-tui/` | Standalone terminal-UI mockup stage (not a council front end). Generates a **pure-ASCII** stdlib mockup (named, navigable states + a `.txt` snapshot each), then **proves each state renders** — one report-only `tui-verifier` seat **per breakpoint**, each on its **own isolated tmux session**, in **parallel**, returning `PASSED / FAILED / NEEDS-HUMAN / MISSING` + a design note; the **chairman fixes**. Ships a `tui-ethos.md` (80-col grid, width-1 glyphs, flicker-free paint). No MCP — tmux via `Bash`. |
 | `skills/visual-companion/` | Standalone browser companion — shows mockups/diagrams/side-by-side comparisons for *visual* questions while the user answers in the terminal (plain HTTP, no WebSockets). Dispatched by a front end (e.g. `elenchus-build` pairs it with `ui-ux-pro-max` for frontend-design questions). |
 | `agents/council-seat.md` | One generic council seat, dispatched per tier (Opus / Sonnet / Haiku) by the four council front ends (`elenchus-build`, `-study`, `-gather`, `-plan`). |
 | `agents/finishing-verifier.md` | The report-only browser-verification sandbox used by `finishing-implementation-elenchus` — Playwright `browser_*` + Context7 + read tools, **no Write/Edit, no recursion** (report-only by construction). |
+| `agents/tui-verifier.md` | The report-only terminal-render sandbox used by `elenchus-tui` — `Bash` (for tmux) + Context7 + read tools, **no Write/Edit, no recursion**. It has `Bash`, so report-only is enforced by **hard rules + red-flags** (drive your own private tmux socket, never the default server), not structurally. |
 
 ## Install
 
@@ -77,17 +85,20 @@ For example, to install globally from a clone of this repo:
 
 ```sh
 cp -r skills/elenchus-council skills/elenchus-build skills/elenchus-study skills/elenchus-gather \
-      skills/elenchus-plan skills/finishing-implementation-elenchus skills/visual-companion ~/.claude/skills/
-cp agents/council-seat.md agents/finishing-verifier.md ~/.claude/agents/
+      skills/elenchus-plan skills/finishing-implementation-elenchus skills/elenchus-tui \
+      skills/visual-companion ~/.claude/skills/
+cp agents/council-seat.md agents/finishing-verifier.md agents/tui-verifier.md ~/.claude/agents/
 ```
 
 (For a per-project install, replace `~/.claude/` with `<your-project>/.claude/`.) The four
 council front ends (`elenchus-build`, `-study`, `-gather`, `-plan`) and the shared engine
 depend on the `council-seat` agent; `finishing-implementation-elenchus` depends on the
-`finishing-verifier` agent instead — copy whichever agents match the skills you install (or
-both, to get everything). `visual-companion` is optional (a display helper the front ends
-dispatch) and needs no agent. The finishing pass also needs the Playwright MCP server (see
-[Playwright MCP](#playwright-mcp-for-the-finishing-pass) below).
+`finishing-verifier` agent instead, and `elenchus-tui` depends on the `tui-verifier` agent —
+copy whichever agents match the skills you install (or all three, to get everything).
+`visual-companion` is optional (a display helper the front ends dispatch) and needs no agent.
+The finishing pass also needs the Playwright MCP server (see
+[Playwright MCP](#playwright-mcp-for-the-finishing-pass) below); `elenchus-tui` needs **no
+MCP** — its verifier drives tmux via `Bash` — but the machine must have `tmux` installed.
 
 > **Restart required.** Claude Code registers agents and skills at session start. After
 > copying the files in (or after editing `council-seat.md`), **start a fresh Claude Code
@@ -177,16 +188,19 @@ and survives a context clear.
 
 ### Checkpoint files & `.gitignore`
 
-All the Elenchus skills — the four council front ends and the finishing pass — write their
-session checkpoints and run reports under **`docs/elenchus/`** in your project. These are
-private working scratch, not artifacts to commit — the skills will add a `docs/elenchus/`
-line to your project's `.gitignore` automatically before writing the first checkpoint. If
-you'd rather set it yourself (or want to be sure), add:
+All the Elenchus skills — the four council front ends, the finishing pass, and the
+terminal-UI mockup pass — write their session checkpoints and run reports under
+**`docs/elenchus/`** in your project. These are private working scratch, not artifacts to
+commit — the skills will add a `docs/elenchus/` line to your project's `.gitignore`
+automatically before writing the first checkpoint. If you'd rather set it yourself (or want
+to be sure), add:
 
 ```gitignore
 docs/elenchus/
 ```
 
-Two outputs are real deliverables that live *outside* that ignored scratch: gather's
+Some outputs are real deliverables that live *outside* that ignored scratch: gather's
 `docs/elenchus/<slug>-corpus.*` corpus (force-add it with `git add -f <path>` if you want it
-tracked) and the plan files `elenchus-plan` writes to `docs/superpowers/plans/` (not ignored).
+tracked), the plan files `elenchus-plan` writes to `docs/superpowers/plans/` (not ignored),
+and the mockup script + `<breakpoint>.txt` snapshots `elenchus-tui` writes to
+`mockups/<slug>/` (not ignored — review them, and commit if you want them tracked).

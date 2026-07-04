@@ -1,4 +1,140 @@
-# Plan — `elenchus-plan` + `finishing-implementation-elenchus`
+# Plan: `elenchus-tui` skill  ← ACTIVE
+
+## Context
+
+We built a pure-ASCII animated terminal mockup this session (no frameworks), then
+diagnosed a flicker via **headless tmux on an isolated session** (never touching the
+user's sessions). This skill wraps that exact flow into a reusable Elenchus skill:
+gather breakpoints → design pure-ASCII mockups → **parallel** tmux verification (one
+isolated seat per breakpoint) → chairman fixes → per-breakpoint `.txt` for the user to
+judge. Outcome: a repeatable "design + prove-it-renders" loop for terminal UIs.
+
+## Decisions (from this session's Q&A — all recommended options chosen)
+
+- **Standalone skill**, mirrors `finishing-implementation-elenchus` (generate + verify),
+  NOT a council front-end (no anonymized premise / gate / dissent-synthesis loop).
+- **Deliverable:** one runnable **no-framework** script with named, navigable
+  breakpoint-states **+ auto-generated `<breakpoint>.txt` snapshots** (one per state).
+- **Parallel verify:** **one `tui-verifier` seat per breakpoint**, each in its **OWN
+  isolated tmux session** (tmux's edge over Playwright — no shared-session contention).
+- **Verifier assesses:** objective **PASS/FAIL** (renders, 80-col aligned, no
+  flicker/scroll across time-separated captures, keystrokes reach the right state, clean
+  restore) **+ a short design note** from its tier. Aesthetic verdict stays the user's.
+- **Design intelligence:** built-in **TUI ethos** (80-col grid, width-1 glyphs,
+  visible-width padding, box-drawing vocab, synchronized-output paint, too-small guard).
+  No ui-ux-pro-max (web/mobile-tuned, off-target for ASCII).
+- **No MCP** needed — tmux runs via `Bash`. Simpler than finishing (no Playwright).
+- **Files:** checkpoint/report `docs/elenchus/<slug>-tui.md` (**gitignored**); the script
+  + `<breakpoint>.txt` are **kept deliverables** under `mockups/<slug>/` in the caller
+  project (reviewable; user can commit).
+
+## Status — APPROVED 2026-07-03
+
+Plan approved by user. Both flagged decisions resolved to the recommended path:
+1. **Full RED→GREEN→REFACTOR** cycle (writing-skills; baseline test first).
+2. `tui-verifier` gets **`Bash`** to run tmux; report-only enforced by **hard rules +
+   red-flags** (accepted softer guarantee — keeps "each seat drives its own pane").
+
+**RESUME AFTER /clear:** read this file (the ACTIVE plan at top). Reference implementation
+from the session that spawned this: `mockups/council_tui.py` + `mockups/council-tui.txt`
+(the flicker-free paint + too-small guard + `--print` snapshot pattern to reuse).
+**Next action:** the RED baseline test.
+
+## TODO
+
+**RED — baseline test first (writing-skills Iron Law):**
+- [x] DONE 2026-07-03 — 2 runs, recorded in
+      `docs/validation/runs/2026-07-03-elenchus-tui-RED-baseline.md`. Load-bearing failures
+      fired in BOTH: (1) one agent did design+verify (self-graded → false result it then
+      explained away); (2) no per-breakpoint `.txt` deliverables; (3) ambiguous-width glyph
+      gamble shipped with a rationalizing caveat; (4) static print-per-state only — no
+      flicker-across-time / keystroke check; (5) no parallel per-breakpoint isolation.
+      Predicted-but-UNfired: framework use (both went pure stdlib), pane-capture (both did),
+      kill-server (contaminated — safety line pre-constrained the socket axis; 9 live
+      sessions on the box). Skill targets exactly the fired failures.
+
+**GREEN — write minimal skill countering the baseline:**
+- [x] `agents/tui-verifier.md` (canonical): report-only tmux sandbox (`Bash` + Read/Grep/Glob
+      + Context7; **no Write/Edit, no recursion**). Hard rules: private `-L` socket only, never
+      `kill-server` / never touch sessions it didn't create, `status off` + forced geometry,
+      observe via `capture-pane`, NEEDS-HUMAN not assert, report-only. Fixed schema +
+      one-line design note. **Refined:** flicker ≠ byte-diff (animation), framed-row ≠ 80 but
+      loose lines ≤ 80.
+- [x] Mirror → `.claude/agents/tui-verifier.md`.
+- [x] `skills/elenchus-tui/SKILL.md` (archive): announce → precondition (tmux) → gather
+      breakpoints (starter set) → TUI-ethos generate (script + `.txt`) → roster gate every
+      round → **parallel** dispatch (unique private socket/seat) → merge + reconcile (every
+      breakpoint; preserve dissenting design notes) → chairman-only fixes → bounded confirm →
+      report + gitignore `docs/elenchus/`. Common Mistakes + rationalization table + red-flags
+      seeded from RED.
+- [x] Supporting file `skills/elenchus-tui/tui-ethos.md` (80-col grid law, framed-vs-loose
+      width, width-1 glyph discipline, flicker-free paint, alt-screen/restore, too-small guard,
+      `--print` snapshot, shared tmux verify-harness).
+- [x] Sync → `~/.claude/skills/elenchus-tui/` (diff clean).
+
+**GREEN — verify it passes:**
+- [x] Validated via the documented named-agent fallback (tui-verifier not yet registered this
+      session). Harness pre-flight on the animated reference caught 2 real subtleties (animation
+      confound + framed/loose width) → hardened ethos + agent. Then a planted-bug fixture
+      (`mockups/green-test/`) verified by 2 parallel seats: `ok`→PASSED, `broken`→FAILED (caught
+      the 78-col row, did NOT false-fail the spinner); private sockets only, user's 10 sessions
+      untouched, report-only held, `.txt` per state, chairman fixed + confirmed. Recorded:
+      `docs/validation/runs/2026-07-03-elenchus-tui-GREEN.md`.
+
+**REFACTOR:**
+- [x] No new rationalization surfaced in the seat runs — both applied the refined flicker +
+      framed/loose rules first try. The two loopholes that would false-FAIL (animation, loose
+      lines) were closed in-place during pre-flight; RED tables + red-flags suffice, no extra
+      counters.
+
+**Docs / registration:**
+- [x] Updated elenchus `CLAUDE.md`: What-Elenchus-Is (terminal-UI stage), agents list (+
+      tui-verifier, Bash/hard-rules note), editing-skills skill list (+ tui-ethos), durable
+      state (report + kept mockups deliverables), MCP section (no-MCP note), restart line.
+- [x] Updated `README`: pipeline note, Components rows (skill + agent), install `cp` + prose.
+- [x] Restart requirement + `general-purpose` named-agent fallback documented in SKILL.md
+      (Dispatch notes) and exercised in GREEN.
+
+## Review
+
+### `elenchus-tui` — COMPLETE (2026-07-03, pending restart for the named agent)
+
+Built the standalone terminal-UI design→verify skill via the writing-skills TDD cycle.
+
+**Files (archive + synced to `~/.claude/skills/`; agent mirrored to `.claude/agents/`):**
+- `skills/elenchus-tui/SKILL.md` — generate → parallel-tmux-verify → chairman-fix loop.
+- `skills/elenchus-tui/tui-ethos.md` — the pure-ASCII design rules + shared verify-harness.
+- `agents/tui-verifier.md` (+ `.claude/agents/` mirror) — report-only tmux sandbox; report-only
+  by **hard rules + red-flags** (it has `Bash`, so not structurally no-Write like the others).
+
+**Validation (writing-skills TDD):**
+- RED (`…-tui-RED-baseline.md`): 2 runs. Load-bearing failures fired in both — one agent
+  designed+graded itself (self-grade → false result explained away), no per-breakpoint `.txt`,
+  ambiguous-width glyph gamble caveated, static-frame-only (no flicker/keys), no parallel
+  isolation. Predicted-but-unfired (honest): framework use, pane-capture, kill-server (the last
+  contaminated by a safety line — 9 live sessions on the box).
+- GREEN (`…-tui-GREEN.md`): harness pre-flight caught the animation confound + framed/loose
+  width → hardened both files; a planted-bug fixture then verified by 2 parallel seats hit
+  every RED target (separation, `.txt`, independent catch, no animation false-fail, isolation).
+- REFACTOR: no new loophole → no extra counters.
+
+**Key design decision:** report-only is enforced by **hard rules + red-flags**, not a no-Write
+sandbox, because each seat needs `Bash` to drive its own tmux pane — the one accepted softer
+guarantee vs. the council/finishing sandboxes. Isolation (private `-L` socket, never the
+default server) is the load-bearing safety rule, proven against the user's 9–10 live sessions.
+
+**Two evidence-driven refinements over the approved plan** (from the live harness): the flicker
+check is **untorn-frame across captures**, not byte-identical (animation would false-FAIL); and
+width is judged **framed rows == 80, loose lines ≤ 80** (the reference's 77/79 keybar/tagline
+are correct, not bugs).
+
+**Pending a restart:** a true `subagent_type: tui-verifier` dispatch (this session used the
+fallback with rules inlined — identical guarantees, just not the registered named agent). The
+`green-test/` fixture under `mockups/` is a kept demo; it can be deleted or committed at will.
+
+---
+
+# [ARCHIVED] Plan — `elenchus-plan` + `finishing-implementation-elenchus`
 
 Spec: `docs/2026-07-02-elenchus-plan-and-finishing-spec.md` (approved shape:
 front-end-over-engine for plan; parallel Playwright harness for finishing;

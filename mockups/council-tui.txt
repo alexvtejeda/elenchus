@@ -1,0 +1,41 @@
+╭──────────────────────────────────────────────────────────────────────────────╮
+│  [=]  ELENCHUS  ·  council in session      premise: real-time-collab-editor  │
+│──────────────────────────────────────────────────────────────────────────────│
+│  round 2 / 3  ·  stress-testing your answers    elapsed 04:12   ⣾ live       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+┌─ SEATS ───────────────────────┐  ┌─ FLOOR ───────────────────────────────────┐
+│                               │  │                                           │
+│  ◆ seat α   opus-4.8  ●  ◀    │  │  » seat γ  ·  haiku                       │
+│    depth █████████████░  95%  │  │    "You claim CRDTs make merge            │
+│    posture: relentless        │  │     conflicts impossible — but your       │
+│                               │  │     cursor-sync is last-write-wins.       │
+│  ◆ seat β   sonnet-5  ●       │  │     Two offline carets collide:           │
+│    depth ███████████░░░  82%  │  │     whose wins? Name the rule."           │
+│    posture: systems-skeptic   │  │                                           │
+│                               │  │  » seat α  ·  opus      ┌─────────┐       │
+│  ◆ seat γ   haiku-4.5 ●       │  │    "Wrong bug. The real  │ DISSENT │      │
+│    depth ███████████░░░  82%  │  │     gap is presence GC — └─────────┘      │
+│    posture: latency-hawk      │  │     10k ghost sessions at 3 weeks."       │
+│                               │  │                                           │
+│  ○ chairman · ⣾ synth         │  │  seats clash → BOTH stand, no merge       │
+└───────────────────────────────┘  └───────────────────────────────────────────┘
+
+┌─ CONTRADICTION LEDGER ───────────────────────────────────────────────────────┐
+│                                                                              │
+│   #  claim                          status       raised by                   │
+│   ─  ─────────────────────────────  ──────────   ─────────                   │
+│   1  offline-first, zero conflicts  ✗ refuted    α  β                        │
+│   2  presence scales for free       ! unproven   α                           │
+│   3  server stays stateless         ~ contested  β  γ                        │
+│   4  p99 < 50ms at 1k peers         ◷ testing    γ                           │
+│                                                                              │
+│   ▸ 2 unresolved  ·  gate stays CLOSED until you answer #1, #3               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  the council never green-lights — it hands you the open questions. you decide.
+
+╭──────────────────────────────────────────────────────────────────────────────╮
+│  ›                                                                           │
+╰──────────────────────────────────────────────────────────────────────────────╯
+  [tab] seat  [f] floor  [s] synthesis  [g] gate  [enter] answer  [q] adjourn
