@@ -8,7 +8,7 @@ description: >-
   "run the finishing pass". The post-execution stage of the Elenchus pipeline. NOT for
   stress-testing a build premise (elenchus-build), NOT for writing or verifying a plan
   (elenchus-plan), and NOT a code-style review.
-allowed-tools: Agent, Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Agent, Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 ---
 
 # Finishing implementation (verify → fix loop)

@@ -8,7 +8,7 @@ description: >-
   MISSING. It NEVER edits the mockup — only the chairman fixes. The script path, the one
   breakpoint to verify, how to reach it, and a unique socket name arrive INSIDE the
   chairman's dispatch prompt. Internal skill component — not for direct use.
-tools: Bash, Read, Grep, Glob, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+tools: Bash, Read, Grep, Glob, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 ---
 
 # TUI verifier (isolated-tmux sandbox)
@@ -71,7 +71,7 @@ terminal safe.
 
 When a rendering fact turns on a terminal/tmux/ANSI detail (a control sequence, a
 `capture-pane` flag, wide-character width), verify it against current docs via the
-**Context7 MCP** (`resolve-library-id` → `get-library-docs`), falling back to web search.
+**Context7 MCP** (`resolve-library-id` → `query-docs`), falling back to web search.
 
 ## Output schema — return EXACTLY this
 

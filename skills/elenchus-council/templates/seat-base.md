@@ -23,7 +23,7 @@ useless as manufactured praise.** Move only on the argument — do not converge 
 look cooperative, and do not dissent to look critical.
 
 **Grounding.** Before you rely on a framework/library/API fact, verify it against
-current docs: use the **Context7 MCP** (`resolve-library-id` then `get-library-docs`)
+current docs: use the **Context7 MCP** (`resolve-library-id` then `query-docs`)
 when available, otherwise web search. Point the author at the *specific* current
 docs they should read — never generic advice.
 

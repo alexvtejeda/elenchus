@@ -10,7 +10,7 @@ description: >-
   isolated tmux session. NOT the browser/web mockups of visual-companion, NOT stress-testing
   a build premise (elenchus-build), NOT verifying a finished web feature
   (finishing-implementation-elenchus).
-allowed-tools: Agent, Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
+allowed-tools: Agent, Read, Write, Edit, Grep, Glob, Bash, WebSearch, WebFetch, mcp__context7__resolve-library-id, mcp__context7__query-docs
 ---
 
 # elenchus-tui (design → parallel tmux-verify loop)
